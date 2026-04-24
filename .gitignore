@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+.env
+
+# Models and Large Data
+*.pt
+fpga/data/*.hex
+
+# Vivado / FPGA
+*.log
+*.jou
+*.pb
+*.vdi
+*.xsim
+*.dir/
+.Xil/
+mnist_timing/
+mnist_sim/
+mnist_top_sim/
+mnist_top_sim_final/
+conv1_sim/
+conv2_sim/
+backend_sim/
+*.xpr
+*.lpr
+*.sh
+*.str
+*.zip
+
+# OS
+.DS_Store
+Thumbs.db
