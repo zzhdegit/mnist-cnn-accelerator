@@ -1,7 +1,8 @@
-# Final project name to avoid any locks
-create_project -force mnist_final_v5 ./mnist_final_v5
+# Create final stable project for U50
+set part_name "xcu50-fsvh2104-2-e"
+create_project -force mnist_u50_stable ./mnist_u50_stable -part $part_name
 
-# Add ALL files
+# Add all files
 add_files ../src/line_buffer.sv
 add_files ../src/mac_3x3.sv
 add_files ../src/mac_3x3x32.sv
@@ -12,16 +13,11 @@ add_files ../src/avgpool_3x3_s3.sv
 add_files ../src/fc1_layer.sv
 add_files ../src/fc2_layer.sv
 add_files ../src/top_mnist.sv
-add_files -fileset sim_1 ../sim/tb_mnist_top.sv
 
-# Force SystemVerilog type
+# Add constraints
+add_files -fileset constrs_1 ./timing.xdc
 set_property file_type SystemVerilog [get_files *.sv]
 
-# Refresh
 update_compile_order -fileset sources_1
-update_compile_order -fileset sim_1
-
-set_property top tb_mnist_top [get_filesets sim_1]
-launch_simulation
-run all
+puts "Project mnist_u50_stable created successfully."
 exit

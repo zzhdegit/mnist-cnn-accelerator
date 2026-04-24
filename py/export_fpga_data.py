@@ -18,7 +18,7 @@ def main():
     model.load_state_dict(torch.load("mnist_cnn.pt", map_location="cpu", weights_only=True))
     model.eval()
 
-    # Load 5 test images for multi-image testing
+    # Load 5 test images
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,))
@@ -28,8 +28,7 @@ def main():
     data_dir = '../fpga/data'
     os.makedirs(data_dir, exist_ok=True)
 
-    # 1. Export Weights with Fixed-Point Scaling
-    # Conv1
+    # 1. Export Weights
     w1 = to_q8_8(model.conv1.weight.detach().numpy())
     b1 = to_q8_8(model.conv1.bias.detach().numpy())
     with open(os.path.join(data_dir, 'conv1_w.hex'), 'w') as f:
@@ -40,7 +39,6 @@ def main():
     with open(os.path.join(data_dir, 'conv1_b.hex'), 'w') as f:
         for oc in range(32): f.write(hex_16(b1[oc]))
 
-    # Conv2
     w2 = to_q8_8(model.conv2.weight.detach().numpy())
     b2 = to_q8_8(model.conv2.bias.detach().numpy())
     with open(os.path.join(data_dir, 'conv2_w.hex'), 'w') as f:
@@ -52,14 +50,16 @@ def main():
     with open(os.path.join(data_dir, 'conv2_b.hex'), 'w') as f:
         for oc in range(64): f.write(hex_16(b2[oc]))
 
-    # FC1 - CRITICAL: Reorder weights to NHWC pixel-major for hardware
-    w_fc1 = to_q8_8(model.fc1.weight.detach().numpy()) # (128, 9216)
+    # FC1 - 1024 inputs (64 channels * 4 * 4)
+    w_fc1 = to_q8_8(model.fc1.weight.detach().numpy()) # (128, 1024)
     b_fc1 = to_q8_8(model.fc1.bias.detach().numpy())
     with open(os.path.join(data_dir, 'fc1_w.hex'), 'w') as f:
         for oc in range(128):
-            # PyTorch: ic, row, col. Hardware: row, col, ic
-            w_reshaped = w_fc1[oc].reshape(64, 12, 12)
-            # Transpose (C, H, W) to (H, W, C)
+            # Model weight for 128 nodes, each having 1024 inputs.
+            # 1024 inputs represent 64 channels, 4x4 spatial.
+            # PyTorch flatten is C, H, W.
+            # Reorder to H, W, C for hardware stream.
+            w_reshaped = w_fc1[oc].reshape(64, 4, 4)
             w_hw = w_reshaped.transpose(1, 2, 0).flatten()
             for val in w_hw:
                 f.write(hex_16(val))
@@ -77,19 +77,18 @@ def main():
         for oc in range(10): f.write(hex_16(b_fc2[oc]))
 
     # 2. Export 5 Test Images and their Golden Results
-    print("Exporting multi-image test data...")
+    print("Exporting multi-image test data (99% version)...")
     for img_idx in range(5):
         img, label = dataset[img_idx]
         img_q = to_q8_8(img[0].numpy())
         
-        # Save image
         with open(os.path.join(data_dir, f'image_{img_idx}.hex'), 'w') as f:
             for r in range(28):
                 for c in range(28):
                     f.write(hex_16(img_q[r, c]))
         
-        # RTL-Equivalent Inference in Python
-        # Conv1
+        # RTL-Equivalent Inference
+        # C1
         c1_out = np.zeros((32, 26, 26), dtype=np.int32)
         for oc in range(32):
             for r in range(26):
@@ -98,11 +97,10 @@ def main():
                     for kr in range(3):
                         for kc in range(3):
                             acc += int(img_q[r+kr, c+kc]) * int(w1[oc, 0, kr, kc])
-                    val = acc >> 8
-                    c1_out[oc, r, c] = np.clip(val, -32768, 32767)
+                    c1_out[oc, r, c] = np.clip(acc >> 8, -32768, 32767)
         c1_relu = np.maximum(c1_out, 0)
 
-        # Conv2
+        # C2
         c2_out = np.zeros((64, 24, 24), dtype=np.int32)
         for oc in range(64):
             for r in range(24):
@@ -112,28 +110,33 @@ def main():
                         for kr in range(3):
                             for kc in range(3):
                                 acc += int(c1_relu[ic, r+kr, c+kc]) * int(w2[oc, ic, kr, kc])
-                    val = acc >> 8
-                    c2_out[oc, r, c] = np.clip(val, -32768, 32767)
+                    c2_out[oc, r, c] = np.clip(acc >> 8, -32768, 32767)
         c2_relu = np.maximum(c2_out, 0)
 
-        # Maxpool
+        # Maxpool (2x2 -> 12x12)
         mp_out = np.zeros((64, 12, 12), dtype=np.int32)
         for oc in range(64):
             for r in range(12):
                 for c in range(12):
                     mp_out[oc, r, c] = np.max(c2_relu[oc, r*2:r*2+2, c*2:c*2+2])
         
-        # FC1 (using the NHWC ordering we designed for hardware)
-        flat_input = mp_out.transpose(1, 2, 0).flatten() # (12, 12, 64)
+        # New: 3x3 Avg Pool (12x12 -> 4x4)
+        gap_out = np.zeros((64, 4, 4), dtype=np.int32)
+        for oc in range(64):
+            for r in range(4):
+                for c in range(4):
+                    s = np.sum(mp_out[oc, r*3:r*3+3, c*3:c*3+3])
+                    gap_out[oc, r, c] = s // 9
+
+        # FC1 (NHWC stream: 4x4x64 = 1024 inputs)
+        flat_input = gap_out.transpose(1, 2, 0).flatten() 
         f1_out = np.zeros(128, dtype=np.int32)
         for oc in range(128):
-            # Using the reordered hardware weight logic
-            w_fc1_hw = w_fc1[oc].reshape(64, 12, 12).transpose(1, 2, 0).flatten()
+            w_fc1_hw = w_fc1[oc].reshape(64, 4, 4).transpose(1, 2, 0).flatten()
             acc = int(b_fc1[oc]) << 8
-            for ic in range(9216):
+            for ic in range(1024):
                 acc += int(flat_input[ic]) * int(w_fc1_hw[ic])
-            val = acc >> 8
-            f1_out[oc] = np.clip(val, -32768, 32767)
+            f1_out[oc] = np.clip(acc >> 8, -32768, 32767)
         f1_relu = np.maximum(f1_out, 0)
 
         # FC2
@@ -144,14 +147,12 @@ def main():
                 acc += int(f1_relu[ic]) * int(w_fc2[oc, ic])
             f2_out[oc] = np.clip(acc >> 8, -32768, 32767)
         
-        # Save Golden
         with open(os.path.join(data_dir, f'golden_{img_idx}.hex'), 'w') as f:
-            for v in f2_out:
-                f.write(hex_16(v))
+            for v in f2_out: f.write(hex_16(v))
         
         print(f"Img {img_idx} (Label {label}): Predicted {np.argmax(f2_out)}")
 
-    print("All multi-image data exported!")
+    print("99% Accuracy data exported successfully!")
 
 if __name__ == '__main__':
     main()

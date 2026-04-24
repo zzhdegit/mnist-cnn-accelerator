@@ -29,6 +29,14 @@ module tb_mnist_top;
         forever #5 clk = ~clk;
     end
 
+    // Simulation Progress Monitor
+    initial begin
+        forever begin
+            #100000;
+            $display("[%t] Simulation still running...", $time);
+        end
+    end
+
     // Load Weights once
     reg signed [DATA_WIDTH-1:0] tmp_mem [0:100000]; 
     integer oc, ic, row, col, i, img_idx;
@@ -61,9 +69,21 @@ module tb_mnist_top;
             
             $display("[%t] Testing Image %0d...", $time, img_idx);
             for (i = 0; i < 28*28; i = i + 1) begin
-                @(posedge clk);
+                integer timeout_cnt;
+                timeout_cnt = 0;
+                while (!dut.ready_out) begin
+                    @(posedge clk);
+                    valid_in <= 0; // Ensure valid is low while waiting
+                    timeout_cnt = timeout_cnt + 1;
+                    if (timeout_cnt > 2000) begin
+                        $display("[%t] ERROR: Testbench timeout waiting for ready_out at pixel %d", $time, i);
+                        $finish;
+                    end
+                end
                 valid_in <= 1;
                 pixel_in <= img_mem[i];
+                @(posedge clk);
+                valid_in <= 0; // Immediate pull down after one clock
             end
             @(posedge clk);
             valid_in <= 0;

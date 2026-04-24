@@ -4,7 +4,7 @@ module fc1_layer #(
     parameter DATA_WIDTH = 16,
     parameter IN_CHANNELS = 64,
     parameter OUT_CHANNELS = 128,
-    parameter IN_PIXELS = 144
+    parameter IN_PIXELS = 16 // 4x4
 )(
     input wire clk,
     input wire rst_n,
@@ -15,72 +15,71 @@ module fc1_layer #(
     output reg signed [DATA_WIDTH-1:0] out_pixels [0:OUT_CHANNELS-1]
 );
 
-    // 1D ROM for weights (1,179,648 elements)
-    // Using a 1D array helps synthesis infer BRAM more reliably
-    reg signed [DATA_WIDTH-1:0] w_rom [0:OUT_CHANNELS*IN_PIXELS*IN_CHANNELS-1];
-    reg signed [DATA_WIDTH-1:0] b_rom [0:OUT_CHANNELS-1];
+    localparam TOTAL_INPUTS = IN_CHANNELS * IN_PIXELS; // 1024
+    localparam TOTAL_WEIGHTS = OUT_CHANNELS * TOTAL_INPUTS; // 131072
+
+    // Fixed: Using 1D array to bypass Vivado's 2D array bit-count limit (Synth 8-4556)
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] weights [0:TOTAL_WEIGHTS-1];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] biases [0:OUT_CHANNELS-1];
 
     initial begin
-        $readmemh("D:/IC_Workspace/mnist/fpga/data/fc1_w.hex", w_rom);
-        $readmemh("D:/IC_Workspace/mnist/fpga/data/fc1_b.hex", b_rom);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/fc1_w.hex", weights);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/fc1_b.hex", biases);
     end
 
-    reg signed [39:0] accumulators [0:OUT_CHANNELS-1];
-    reg [9:0] pixel_cnt;
+    reg [10:0] input_cnt;
+    reg signed [39:0] acc [0:OUT_CHANNELS-1];
     
-    typedef enum logic {IDLE_ACCUM = 1'b0, FINALIZE = 1'b1} state_t;
+    typedef enum {IDLE, ACCUM, FINISH} state_t;
     state_t state;
 
-    integer oc, ic;
-    // Use non-nested temporary variables to help synthesis
-    logic signed [39:0] acc_prev;
-    logic signed [39:0] prod_sum;
-
+    integer i;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            pixel_cnt <= 0;
+            state <= IDLE;
+            input_cnt <= 0;
             valid_out <= 0;
-            state <= IDLE_ACCUM;
-            for (oc=0; oc<OUT_CHANNELS; oc=oc+1) begin
-                accumulators[oc] <= 0;
-                out_pixels[oc] <= 0;
-            end
+            for (i=0; i<OUT_CHANNELS; i=i+1) acc[i] <= 0;
         end else begin
             case (state)
-                IDLE_ACCUM: begin
+                IDLE: begin
                     valid_out <= 0;
                     if (valid_in) begin
-                        for (oc=0; oc<OUT_CHANNELS; oc=oc+1) begin
-                            acc_prev = (pixel_cnt == 0) ? 40'd0 : accumulators[oc];
-                            prod_sum = 0;
-                            for (ic=0; ic<IN_CHANNELS; ic=ic+1) begin
-                                prod_sum = prod_sum + $signed(pixel_in[ic*DATA_WIDTH +: DATA_WIDTH]) * w_rom[oc*(IN_PIXELS*IN_CHANNELS) + pixel_cnt*IN_CHANNELS + ic];
-                            end
-                            accumulators[oc] <= acc_prev + prod_sum;
+                        for (i=0; i<OUT_CHANNELS; i=i+1) begin
+                            acc[i] <= ($signed(biases[i]) <<< 8); 
+                        end
+                        state <= ACCUM;
+                        input_cnt <= 0;
+                    end
+                end
+
+                ACCUM: begin
+                    if (valid_in) begin
+                        for (i=0; i<OUT_CHANNELS; i=i+1) begin
+                            // Optimized Indexing: Flattened 1D weight access
+                            acc[i] <= acc[i] + $signed(pixel_in[ (input_cnt % 64)*DATA_WIDTH +: DATA_WIDTH ]) * weights[i * TOTAL_INPUTS + input_cnt];
                         end
                         
-                        if (pixel_cnt == IN_PIXELS - 1) begin
-                            pixel_cnt <= 0;
-                            state <= FINALIZE;
+                        if (input_cnt == TOTAL_INPUTS - 1) begin
+                            state <= FINISH;
                         end else begin
-                            pixel_cnt <= pixel_cnt + 1;
+                            input_cnt <= input_cnt + 1;
                         end
                     end
                 end
-                
-                FINALIZE: begin
-                    valid_out <= 1;
-                    for (oc=0; oc<OUT_CHANNELS; oc=oc+1) begin
-                        automatic logic signed [39:0] f_sum = accumulators[oc] + ($signed(b_rom[oc]) <<< 8);
-                        automatic logic signed [15:0] sc;
-                        if ((f_sum >>> 8) > 32767) sc = 32767;
-                        else if ((f_sum >>> 8) < -32768) sc = -32768;
-                        else sc = f_sum[23:8];
-                        out_pixels[oc] <= (sc < 0) ? 16'd0 : sc;
+
+                FINISH: begin
+                    for (i=0; i<OUT_CHANNELS; i=i+1) begin
+                        automatic logic signed [39:0] val = acc[i];
+                        if ((val >>> 8) > 32767) out_pixels[i] <= 16'h7FFF;
+                        else if ((val >>> 8) < -32768) out_pixels[i] <= 16'h8000;
+                        else out_pixels[i] <= val[23:8];
                     end
-                    state <= IDLE_ACCUM;
+                    valid_out <= 1;
+                    state <= IDLE;
                 end
             endcase
         end
     end
+
 endmodule

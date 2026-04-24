@@ -14,7 +14,7 @@ class Net(nn.Module):
         self.conv2 = nn.Conv2d(32, 64, 3, 1)
         self.dropout1 = nn.Dropout(0.25)
         self.dropout2 = nn.Dropout(0.5)
-        self.fc1 = nn.Linear(9216, 128)
+        self.fc1 = nn.Linear(1024, 128) # Updated: 64 channels * 4 * 4 = 1024
         self.fc2 = nn.Linear(128, 10)
 
     def forward(self, x):
@@ -24,12 +24,14 @@ class Net(nn.Module):
         x = F.relu(x)
         x = F.max_pool2d(x, 2)
         x = self.dropout1(x)
+        # Adaptive pooling to a fixed 4x4 spatial size per channel
+        x = F.adaptive_avg_pool2d(x, (4, 4))
         x = torch.flatten(x, 1)
         x = self.fc1(x)
         x = F.relu(x)
         x = self.dropout2(x)
         x = self.fc2(x)
-        output = F.log_softmax(x, dim=1)
+        return F.log_softmax(x, dim=1)
         return output
 
 

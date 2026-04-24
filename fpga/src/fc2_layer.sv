@@ -26,7 +26,6 @@ module fc2_layer #(
     state_t state;
     
     integer oc, ic;
-    logic signed [39:0] cur_acc;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -38,14 +37,15 @@ module fc2_layer #(
                 IDLE_CALC: begin
                     if (valid_in) begin
                         for (oc=0; oc<OUT_CHANNELS; oc=oc+1) begin
-                            cur_acc = $signed(b_rom[oc]) <<< 8;
+                            automatic logic signed [39:0] total_acc;
+                            total_acc = $signed(b_rom[oc]) <<< 8;
                             for (ic=0; ic<IN_CHANNELS; ic=ic+1) begin
-                                cur_acc = cur_acc + $signed(pixel_in[ic]) * w_rom[oc*IN_CHANNELS + ic];
+                                total_acc = total_acc + $signed(pixel_in[ic]) * w_rom[oc*IN_CHANNELS + ic];
                             end
                             
-                            if ((cur_acc >>> 8) > 32767) out_pixels[oc] <= 16'h7FFF;
-                            else if ((cur_acc >>> 8) < -32768) out_pixels[oc] <= 16'h8000;
-                            else out_pixels[oc] <= cur_acc[23:8];
+                            if ((total_acc >>> 8) > 32767) out_pixels[oc] <= 16'h7FFF;
+                            else if ((total_acc >>> 8) < -32768) out_pixels[oc] <= 16'h8000;
+                            else out_pixels[oc] <= total_acc[23:8];
                         end
                         valid_out <= 1;
                         state <= DONE;
