@@ -8,7 +8,7 @@ venv/
 
 # Models and Large Data
 *.pt
-fpga/data/*.hex
+# fpga/data/*.hex (Removed to allow submission)
 
 # Vivado / FPGA
 *.log
