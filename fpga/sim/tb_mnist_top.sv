@@ -42,7 +42,7 @@ module tb_mnist_top;
         $display("--- Starting Zynq-7020 MNIST Accelerator Verification (v5.4) ---");
         $monitor("[%t] ready_out=%b, valid_out=%b, score_idx=%d, score_out=%h", $time, ready_out, valid_out, score_idx, score_out);
         
-        for (img_idx = 0; img_idx < 5; img_idx = img_idx + 1) begin
+        for (img_idx = 0; img_idx < 30; img_idx = img_idx + 1) begin
             reg signed [DATA_WIDTH-1:0] img_mem [0:28*28-1];
             reg signed [DATA_WIDTH-1:0] golden_mem [0:9];
             string img_path, golden_path;
@@ -62,16 +62,19 @@ module tb_mnist_top;
             
             // Feed 28x28 Image
             for (i = 0; i < 28*28; i = i + 1) begin
-                while (!ready_out) @(posedge clk);
-                valid_in <= 1;
-                pixel_in <= img_mem[i];
-                @(posedge clk);
-                valid_in <= 0;
+                valid_in = 1;
+                pixel_in = img_mem[i];
+                do begin
+                    @(posedge clk);
+                end while (ready_out !== 1'b1);
+                
                 if (i % 100 == 0) $display("[%t]   Sent %d pixels", $time, i);
             end
+            valid_in = 0;
             
-            // Wait for 10 scores to be collected (score_idx 9)
-            wait(valid_out && score_idx == 9);
+            // Wait for 10 scores to be collected
+            wait(valid_out == 1);
+            wait(valid_out == 0); // Wait until pipeline fully outputs all 10 scores and stops
             @(posedge clk);
             end_time = $time;
             
@@ -84,23 +87,29 @@ module tb_mnist_top;
                 integer hw_max_idx, golden_max_idx;
                 integer signed hw_max_val, golden_max_val;
                 hw_max_idx = 0; golden_max_idx = 0;
-                hw_max_val = hw_scores[0]; golden_max_val = golden_mem[0];
+                hw_max_val = $signed(hw_scores[0]); golden_max_val = $signed(golden_mem[0]);
                 
                 for (integer k=1; k<10; k=k+1) begin
-                    if (hw_scores[k] > hw_max_val) begin
-                        hw_max_val = hw_scores[k];
+                    if ($signed(hw_scores[k]) > hw_max_val) begin
+                        hw_max_val = $signed(hw_scores[k]);
                         hw_max_idx = k;
                     end
-                    if (golden_mem[k] > golden_max_val) begin
-                        golden_max_val = golden_mem[k];
+                    if ($signed(golden_mem[k]) > golden_max_val) begin
+                        golden_max_val = $signed(golden_mem[k]);
                         golden_max_idx = k;
                     end
                 end
                 
                 if (hw_max_idx == golden_max_idx)
                     $display(">>> SUCCESS: Image %0d correctly identified as %0d", img_idx, hw_max_idx);
-                else
+                else begin
                     $display(">>> FAILED: Image %0d misidentified (HW=%0d, Golden=%0d)", img_idx, hw_max_idx, golden_max_idx);
+                    $write("    HW Scores: ");
+                    for (integer j=0; j<10; j=j+1) $write("%d ", $signed(hw_scores[j]));
+                    $write("\n    Golden Scores: ");
+                    for (integer j=0; j<10; j=j+1) $write("%d ", $signed(golden_mem[j]));
+                    $display("");
+                end
             end
             $display("---------------------------\n");
             #1000;

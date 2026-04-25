@@ -25,7 +25,8 @@ def main():
     ])
     dataset = datasets.MNIST('../data', train=False, transform=transform)
     
-    data_dir = '../fpga/data'
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    data_dir = os.path.join(script_dir, '../fpga/data')
     os.makedirs(data_dir, exist_ok=True)
 
     # 1. Export Weights
@@ -50,16 +51,16 @@ def main():
     with open(os.path.join(data_dir, 'conv2_b.hex'), 'w') as f:
         for oc in range(64): f.write(hex_16(b2[oc]))
 
-    # FC1 - 1024 inputs (64 channels * 4 * 4)
-    w_fc1 = to_q8_8(model.fc1.weight.detach().numpy()) # (128, 1024)
+    # FC1 - 64 inputs (64 channels * 1 * 1)
+    w_fc1 = to_q8_8(model.fc1.weight.detach().numpy()) # (128, 64)
     b_fc1 = to_q8_8(model.fc1.bias.detach().numpy())
     with open(os.path.join(data_dir, 'fc1_w.hex'), 'w') as f:
         for oc in range(128):
-            # Model weight for 128 nodes, each having 1024 inputs.
-            # 1024 inputs represent 64 channels, 4x4 spatial.
+            # Model weight for 128 nodes, each having 64 inputs.
+            # 64 inputs represent 64 channels, 1x1 spatial.
             # PyTorch flatten is C, H, W.
             # Reorder to H, W, C for hardware stream.
-            w_reshaped = w_fc1[oc].reshape(64, 4, 4)
+            w_reshaped = w_fc1[oc].reshape(64, 1, 1)
             w_hw = w_reshaped.transpose(1, 2, 0).flatten()
             for val in w_hw:
                 f.write(hex_16(val))
@@ -76,9 +77,9 @@ def main():
     with open(os.path.join(data_dir, 'fc2_b.hex'), 'w') as f:
         for oc in range(10): f.write(hex_16(b_fc2[oc]))
 
-    # 2. Export 5 Test Images and their Golden Results
-    print("Exporting multi-image test data (99% version)...")
-    for img_idx in range(5):
+    # 2. Export 30 Test Images and their Golden Results
+    print("Exporting 30 test images for final verification...")
+    for img_idx in range(30):
         img, label = dataset[img_idx]
         img_q = to_q8_8(img[0].numpy())
         
@@ -120,21 +121,19 @@ def main():
                 for c in range(12):
                     mp_out[oc, r, c] = np.max(c2_relu[oc, r*2:r*2+2, c*2:c*2+2])
         
-        # New: 3x3 Avg Pool (12x12 -> 4x4)
-        gap_out = np.zeros((64, 4, 4), dtype=np.int32)
+        # New: 12x12 Avg Pool (Global) for 90% target
+        gap_out = np.zeros((64, 1, 1), dtype=np.int32)
         for oc in range(64):
-            for r in range(4):
-                for c in range(4):
-                    s = np.sum(mp_out[oc, r*3:r*3+3, c*3:c*3+3])
-                    gap_out[oc, r, c] = s // 9
+            val = np.sum(mp_out[oc, :, :]) >> 7
+            gap_out[oc, 0, 0] = min(val, 32767)
 
-        # FC1 (NHWC stream: 4x4x64 = 1024 inputs)
+        # FC1 (NHWC stream: 1x1x64 = 64 inputs)
         flat_input = gap_out.transpose(1, 2, 0).flatten() 
         f1_out = np.zeros(128, dtype=np.int32)
         for oc in range(128):
-            w_fc1_hw = w_fc1[oc].reshape(64, 4, 4).transpose(1, 2, 0).flatten()
+            w_fc1_hw = w_fc1[oc].reshape(64, 1, 1).transpose(1, 2, 0).flatten()
             acc = int(b_fc1[oc]) << 8
-            for ic in range(1024):
+            for ic in range(64):
                 acc += int(flat_input[ic]) * int(w_fc1_hw[ic])
             f1_out[oc] = np.clip(acc >> 8, -32768, 32767)
         f1_relu = np.maximum(f1_out, 0)

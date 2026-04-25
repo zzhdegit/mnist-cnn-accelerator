@@ -1,7 +1,6 @@
 `timescale 1ns / 1ps
 
-// Zynq-7020 Ultra-Lean Line Buffer (v4.3)
-// FIXED: Uses BRAM hints to offload Shift Registers from LUTs to BRAM.
+// Zynq-7020 Robust FIFO-style Line Buffer (v8.2 - Zero-initialized)
 module line_buffer #(
     parameter DATA_WIDTH = 16,
     parameter IMG_WIDTH = 28
@@ -9,7 +8,7 @@ module line_buffer #(
     input wire clk,
     input wire rst_n,
     input wire valid_in,
-    output reg ready_out,
+    output wire ready_out,
     input wire signed [DATA_WIDTH-1:0] pixel_in,
     
     output reg valid_out,
@@ -17,45 +16,61 @@ module line_buffer #(
     output reg signed [DATA_WIDTH-1:0] pixel_out [0:8]
 );
 
-    // Using explicit BRAM-style storage for the rows
-    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] mem_row0 [0:IMG_WIDTH-1];
-    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] mem_row1 [0:IMG_WIDTH-1];
-    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] mem_row2 [0:IMG_WIDTH-1];
+    // Three rows of storage: 2 FIFOs (for row 0 and 1) + current row registers
+    // Since width is small (28), we use registers/Distributed RAM to save BRAM
+    reg signed [DATA_WIDTH-1:0] fifo1 [0:IMG_WIDTH-1];
+    reg signed [DATA_WIDTH-1:0] fifo2 [0:IMG_WIDTH-1];
     
-    reg [9:0] col_cnt;
-    reg [9:0] row_cnt;
+    reg [7:0] write_ptr;
+    reg [7:0] row_cnt;
+    reg [7:0] col_cnt;
+    
+    // Window registers (3x3)
+    reg signed [DATA_WIDTH-1:0] r0_t0, r0_t1;
+    reg signed [DATA_WIDTH-1:0] r1_t0, r1_t1;
+    reg signed [DATA_WIDTH-1:0] r2_t0, r2_t1;
 
-    // Window registers (Must stay in FFs for 3x3 access)
-    reg signed [DATA_WIDTH-1:0] window [0:2][0:2];
+    assign ready_out = !valid_out || ready_in;
 
+    integer i;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            col_cnt <= 0; row_cnt <= 0;
-            valid_out <= 0; ready_out <= 1;
+            write_ptr <= 0; row_cnt <= 0; col_cnt <= 0;
+            valid_out <= 0;
+            r0_t0 <= 0; r0_t1 <= 0;
+            r1_t0 <= 0; r1_t1 <= 0;
+            r2_t0 <= 0; r2_t1 <= 0;
+            for (i=0; i<IMG_WIDTH; i=i+1) begin
+                fifo1[i] <= 0; fifo2[i] <= 0;
+            end
+            for (i=0; i<9; i=i+1) pixel_out[i] <= 0;
         end else if (valid_in && ready_out) begin
-            // Shift BRAM rows (Sequential access)
-            mem_row0[col_cnt] <= mem_row1[col_cnt];
-            mem_row1[col_cnt] <= mem_row2[col_cnt];
-            mem_row2[col_cnt] <= pixel_in;
+            // Shift registers for current window
+            r0_t1 <= r0_t0; r0_t0 <= fifo1[write_ptr];
+            r1_t1 <= r1_t0; r1_t0 <= fifo2[write_ptr];
+            r2_t1 <= r2_t0; r2_t0 <= pixel_in;
 
-            // Fill 3x3 window from BRAM outputs (requires 1 cycle delay, simplified here for logic reduction)
-            // To ensure 100% success, we keep the window logic simple
-            pixel_out[0] <= mem_row0[col_cnt]; 
-            pixel_out[3] <= mem_row1[col_cnt];
-            pixel_out[6] <= mem_row2[col_cnt];
-            // ... (Rest of window will be inferred by logic)
+            // Update FIFOs
+            fifo1[write_ptr] <= fifo2[write_ptr];
+            fifo2[write_ptr] <= pixel_in;
 
-            if (col_cnt == IMG_WIDTH - 1) begin
-                col_cnt <= 0;
+            // Pointers
+            if (write_ptr == IMG_WIDTH - 1) begin
+                write_ptr <= 0;
                 row_cnt <= (row_cnt == IMG_WIDTH - 1) ? 0 : row_cnt + 1;
-            end else col_cnt <= col_cnt + 1;
+            end else write_ptr <= write_ptr + 1;
 
-            valid_out <= (row_cnt >= 2 && col_cnt >= 2);
+            if (col_cnt == IMG_WIDTH - 1) col_cnt <= 0;
+            else col_cnt <= col_cnt + 1;
+
+            if (row_cnt >= 2 && col_cnt >= 2) begin
+                valid_out <= 1;
+                pixel_out[0] <= r0_t1; pixel_out[1] <= r0_t0; pixel_out[2] <= fifo1[write_ptr];
+                pixel_out[3] <= r1_t1; pixel_out[4] <= r1_t0; pixel_out[5] <= fifo2[write_ptr];
+                pixel_out[6] <= r2_t1; pixel_out[7] <= r2_t0; pixel_out[8] <= pixel_in;
+            end else valid_out <= 0;
         end else if (valid_out && ready_in) begin
             valid_out <= 0;
         end
     end
-    
-    // NOTE: For 100% LUT reduction, we'll keep it even simpler: 
-    // Just force the big arrays to BRAM.
 endmodule

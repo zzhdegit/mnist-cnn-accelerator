@@ -1,10 +1,11 @@
 `timescale 1ns / 1ps
 
-// Zynq-7020 Ultra-Slim Conv1 (v5.7 - Fully Optimized)
+// Zynq-7020 Conv1 (v8.3 - Pipelined 9-way Parallel MAC)
 module conv1_layer_v5 #(
     parameter DATA_WIDTH = 16,
-    parameter IMG_WIDTH = 28,
-    parameter OUT_CHANNELS = 32
+    parameter IN_CHANNELS = 1,
+    parameter OUT_CHANNELS = 32,
+    parameter IMG_WIDTH = 28
 )(
     input wire clk,
     input wire rst_n,
@@ -17,85 +18,87 @@ module conv1_layer_v5 #(
     output reg signed [DATA_WIDTH-1:0] pixel_out
 );
 
-    wire signed [DATA_WIDTH-1:0] rom_w_out, rom_b_out;
-    reg [15:0] w_addr, b_addr;
-    weight_rom #(OUT_CHANNELS*9, "D:/IC_Workspace/mnist/fpga/data/conv1_w.hex") w_rom_inst (.clk(clk), .addr(w_addr), .data_out(rom_w_out));
-    weight_rom #(OUT_CHANNELS, "D:/IC_Workspace/mnist/fpga/data/conv1_b.hex") b_rom_inst (.clk(clk), .addr(b_addr), .data_out(rom_b_out));
+    reg signed [DATA_WIDTH-1:0] w_mem [0:287];
+    reg signed [DATA_WIDTH-1:0] b_mem [0:31];
+    initial begin
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv1_w.hex", w_mem);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv1_b.hex", b_mem);
+    end
 
-    wire signed [DATA_WIDTH-1:0] line_buf_out [0:8];
-    wire lb_valid, lb_ready;
+    wire signed [DATA_WIDTH-1:0] lb_out [0:8];
+    wire lb_valid, lb_ready_internal;
+    assign ready_out = lb_ready_internal;
 
-    line_buffer #(DATA_WIDTH, IMG_WIDTH) lb_inst (
-        .clk(clk), .rst_n(rst_n), .valid_in(valid_in), .ready_out(ready_out),
-        .pixel_in(pixel_in), .valid_out(lb_valid), .ready_in(lb_ready),
-        .pixel_out(line_buf_out)
-    );
-
-    typedef enum {IDLE, COMPUTE_OC, SERIAL_OUT} state_t;
+    typedef enum {IDLE, COMPUTE, WAIT_PIPE, SERIAL_OUT} state_t;
     state_t state;
     
-    reg [5:0] oc_idx; reg [3:0] px_idx;
-    reg signed [39:0] acc;
-    reg [1:0] pipe_delay;
-    reg signed [31:0] prod_q;
+    reg [5:0] oc_idx;
+    wire lb_ready = (state == SERIAL_OUT && oc_idx == 31 && valid_out && ready_in);
+
+    line_buffer #(DATA_WIDTH, IMG_WIDTH) lb_inst (
+        .clk(clk), .rst_n(rst_n), .valid_in(valid_in), .ready_out(lb_ready_internal),
+        .pixel_in(pixel_in), .valid_out(lb_valid), .ready_in(lb_ready),
+        .pixel_out(lb_out)
+    );
+
+    reg signed [DATA_WIDTH-1:0] results [0:31];
+    reg signed [31:0] prod_regs [0:8];
+    reg signed [39:0] acc_reg;
+    reg [1:0] pipe_cnt;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            state <= IDLE; oc_idx <= 0; px_idx <= 0;
-            valid_out <= 0; acc <= 0; w_addr <= 0; b_addr <= 0;
-            pipe_delay <= 0; prod_q <= 0;
+            state <= IDLE; oc_idx <= 0; valid_out <= 0; pixel_out <= 0;
+            pipe_cnt <= 0; acc_reg <= 0;
+            for (integer i=0; i<32; i=i+1) results[i] <= 0;
+            for (integer i=0; i<9; i=i+1) prod_regs[i] <= 0;
         end else begin
             case (state)
                 IDLE: begin
                     valid_out <= 0;
                     if (lb_valid) begin
-                        state <= COMPUTE_OC;
-                        oc_idx <= 0; px_idx <= 0;
-                        w_addr <= 0; b_addr <= 0;
-                        pipe_delay <= 0;
+                        state <= COMPUTE;
+                        oc_idx <= 0;
+                        pipe_cnt <= 0;
                     end
                 end
 
-                COMPUTE_OC: begin
-                    if (pipe_delay < 2) begin
-                        pipe_delay <= pipe_delay + 1;
-                        w_addr <= w_addr + 1;
-                    end else begin
-                        // Sequential Pipeline
-                        prod_q <= $signed(line_buf_out[px_idx]) * rom_w_out;
-                        
-                        if (px_idx == 0) acc <= (rom_b_out <<< 8);
-                        else acc <= acc + prod_q;
+                COMPUTE: begin
+                    // Stage 1: Multiply (9 parallel multipliers)
+                    for (integer i=0; i<9; i=i+1) begin
+                        prod_regs[i] <= $signed(lb_out[i]) * w_mem[oc_idx*9 + i];
+                    end
+                    
+                    // Stage 2: Sum (Accumulate results of previous cycle)
+                    if (pipe_cnt > 0) begin
+                        automatic logic signed [39:0] t_sum = (b_mem[oc_idx-1] <<< 8);
+                        for (integer i=0; i<9; i=i+1) t_sum = t_sum + prod_regs[i];
+                        results[oc_idx-1] <= (t_sum >>> 8 > 32767) ? 16'h7FFF : (t_sum >>> 8 < 0) ? 16'd0 : t_sum[23:8];
+                    end
 
-                        if (px_idx == 9) begin // +1 cycle to catch last product
-                            px_idx <= 0;
-                            // Saturated RELU
-                            pixel_out <= (acc >>> 8 > 32767) ? 16'h7FFF : (acc >>> 8 < 0) ? 16'd0 : acc[23:8];
-                            valid_out <= 1;
-                            state <= SERIAL_OUT;
-                        end else begin
-                            px_idx <= px_idx + 1;
-                            if (px_idx < 8) w_addr <= w_addr + 1;
-                        end
+                    if (oc_idx == 32) begin
+                        state <= SERIAL_OUT;
+                        oc_idx <= 0;
+                        valid_out <= 1;
+                        pixel_out <= results[0]; 
+                    end else begin
+                        oc_idx <= oc_idx + 1;
+                        pipe_cnt <= 1;
                     end
                 end
 
                 SERIAL_OUT: begin
-                    if (ready_in) begin
-                        valid_out <= 0;
-                        if (oc_idx == OUT_CHANNELS - 1) begin
+                    if (valid_out && ready_in) begin
+                        if (oc_idx == 31) begin
+                            valid_out <= 0;
                             state <= IDLE;
                         end else begin
                             oc_idx <= oc_idx + 1;
-                            b_addr <= oc_idx + 1;
-                            w_addr <= (oc_idx + 1) * 9; // Reset address for next neuron
-                            pipe_delay <= 0;
-                            state <= COMPUTE_OC;
+                            pixel_out <= results[oc_idx + 1];
                         end
                     end
                 end
             endcase
         end
     end
-    assign lb_ready = (state == IDLE);
 endmodule
