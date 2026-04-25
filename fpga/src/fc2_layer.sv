@@ -1,5 +1,6 @@
 `timescale 1ns / 1ps
 
+// Zynq-7020 Ultra-Lean FC2 (v4.2 - Fixed)
 module fc2_layer #(
     parameter DATA_WIDTH = 16,
     parameter IN_CHANNELS = 128,
@@ -14,49 +15,67 @@ module fc2_layer #(
     output reg signed [DATA_WIDTH-1:0] out_pixels [0:OUT_CHANNELS-1]
 );
 
-    reg signed [DATA_WIDTH-1:0] w_rom [0:OUT_CHANNELS*IN_CHANNELS-1];
-    reg signed [DATA_WIDTH-1:0] b_rom [0:OUT_CHANNELS-1];
+    localparam TOTAL_WEIGHTS = OUT_CHANNELS * IN_CHANNELS; 
 
-    initial begin
-        $readmemh("D:/IC_Workspace/mnist/fpga/data/fc2_w.hex", w_rom);
-        $readmemh("D:/IC_Workspace/mnist/fpga/data/fc2_b.hex", b_rom);
-    end
+    wire signed [DATA_WIDTH-1:0] rom_w_out, rom_b_out;
+    reg [15:0] w_addr, b_addr;
+    weight_rom #(TOTAL_WEIGHTS, "D:/IC_Workspace/mnist/fpga/data/fc2_w.hex") w_rom_inst (.clk(clk), .addr(w_addr), .data_out(rom_w_out));
+    weight_rom #(OUT_CHANNELS, "D:/IC_Workspace/mnist/fpga/data/fc2_b.hex") b_rom_inst (.clk(clk), .addr(b_addr), .data_out(rom_b_out));
 
-    typedef enum logic {IDLE_CALC = 1'b0, DONE = 1'b1} state_t;
+    typedef enum {IDLE, FETCH_B, COMPUTE_NEURON, STORE_NEURON, FINISH} state_t;
     state_t state;
     
-    integer oc, ic;
+    reg [3:0] oc_idx; reg [7:0] ic_idx;
+    reg signed [39:0] acc;
+    reg [1:0] pipeline_delay;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            valid_out <= 0;
-            state <= IDLE_CALC;
-            for (oc=0; oc<OUT_CHANNELS; oc=oc+1) out_pixels[oc] <= 0;
+            state <= IDLE; oc_idx <= 0; ic_idx <= 0;
+            valid_out <= 0; w_addr <= 0; b_addr <= 0; acc <= 0; pipeline_delay <= 0;
+            for (integer i=0; i<OUT_CHANNELS; i=i+1) out_pixels[i] <= 0;
         end else begin
             case (state)
-                IDLE_CALC: begin
+                IDLE: begin
+                    valid_out <= 0;
                     if (valid_in) begin
-                        for (oc=0; oc<OUT_CHANNELS; oc=oc+1) begin
-                            automatic logic signed [39:0] total_acc;
-                            total_acc = $signed(b_rom[oc]) <<< 8;
-                            for (ic=0; ic<IN_CHANNELS; ic=ic+1) begin
-                                total_acc = total_acc + $signed(pixel_in[ic]) * w_rom[oc*IN_CHANNELS + ic];
-                            end
-                            
-                            if ((total_acc >>> 8) > 32767) out_pixels[oc] <= 16'h7FFF;
-                            else if ((total_acc >>> 8) < -32768) out_pixels[oc] <= 16'h8000;
-                            else out_pixels[oc] <= total_acc[23:8];
-                        end
-                        valid_out <= 1;
-                        state <= DONE;
-                    end else begin
-                        valid_out <= 0;
+                        state <= FETCH_B; oc_idx <= 0; b_addr <= 0; w_addr <= 0;
                     end
                 end
-                
-                DONE: begin
-                    valid_out <= 0;
-                    state <= IDLE_CALC;
+
+                FETCH_B: begin
+                    state <= COMPUTE_NEURON;
+                    ic_idx <= 0; pipeline_delay <= 0;
+                end
+
+                COMPUTE_NEURON: begin
+                    if (pipeline_delay < 2) begin
+                        pipeline_delay <= pipeline_delay + 1;
+                        w_addr <= w_addr + 1;
+                    end else begin
+                        if (ic_idx == 0) acc <= (rom_b_out <<< 8) + (pixel_in[ic_idx] * rom_w_out);
+                        else acc <= acc + (pixel_in[ic_idx] * rom_w_out);
+                        
+                        if (ic_idx == IN_CHANNELS - 1) state <= STORE_NEURON;
+                        else begin
+                            ic_idx <= ic_idx + 1;
+                            w_addr <= w_addr + 1;
+                        end
+                    end
+                end
+
+                STORE_NEURON: begin
+                    out_pixels[oc_idx] <= (acc >>> 8 > 32767) ? 16'h7FFF : (acc >>> 8 < -32768) ? 16'h8000 : acc[23:8];
+                    if (oc_idx == OUT_CHANNELS - 1) state <= FINISH;
+                    else begin
+                        oc_idx <= oc_idx + 1;
+                        b_addr <= oc_idx + 1;
+                        state <= FETCH_B;
+                    end
+                end
+
+                FINISH: begin
+                    valid_out <= 1; state <= IDLE;
                 end
             endcase
         end

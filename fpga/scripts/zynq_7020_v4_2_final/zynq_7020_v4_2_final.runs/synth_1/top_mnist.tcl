@@ -4,7 +4,7 @@
 
 set TIME_start [clock seconds] 
 namespace eval ::optrace {
-  variable script "D:/IC_Workspace/mnist/fpga/scripts/mnist_u50_final/mnist_u50_final.runs/synth_1/top_mnist.tcl"
+  variable script "D:/IC_Workspace/mnist/fpga/scripts/zynq_7020_v4_2_final/zynq_7020_v4_2_final.runs/synth_1/top_mnist.tcl"
   variable category "vivado_synth"
 }
 
@@ -56,18 +56,17 @@ if {$::dispatch::connected} {
 }
 
 OPTRACE "synth_1" START { ROLLUP_AUTO }
-set_param chipscope.maxJobs 4
 OPTRACE "Creating in-memory project" START { }
-create_project -in_memory -part xcu50-fsvh2104-2-e
+create_project -in_memory -part xc7z020clg400-1
 
 set_param project.singleFileAddWarning.threshold 0
 set_param project.compositeFile.enableAutoGeneration 0
 set_param synth.vivado.isSynthRun true
-set_property webtalk.parent_dir D:/IC_Workspace/mnist/fpga/scripts/mnist_u50_final/mnist_u50_final.cache/wt [current_project]
-set_property parent.project_path D:/IC_Workspace/mnist/fpga/scripts/mnist_u50_final/mnist_u50_final.xpr [current_project]
+set_property webtalk.parent_dir D:/IC_Workspace/mnist/fpga/scripts/zynq_7020_v4_2_final/zynq_7020_v4_2_final.cache/wt [current_project]
+set_property parent.project_path D:/IC_Workspace/mnist/fpga/scripts/zynq_7020_v4_2_final/zynq_7020_v4_2_final.xpr [current_project]
 set_property default_lib xil_defaultlib [current_project]
 set_property target_language Verilog [current_project]
-set_property ip_output_repo d:/IC_Workspace/mnist/fpga/scripts/mnist_u50_final/mnist_u50_final.cache/ip [current_project]
+set_property ip_output_repo d:/IC_Workspace/mnist/fpga/scripts/zynq_7020_v4_2_final/zynq_7020_v4_2_final.cache/ip [current_project]
 set_property ip_cache_permissions {read write} [current_project]
 OPTRACE "Creating in-memory project" END { }
 OPTRACE "Adding files" START { }
@@ -78,9 +77,8 @@ read_verilog -library xil_defaultlib -sv {
   D:/IC_Workspace/mnist/fpga/src/fc1_layer.sv
   D:/IC_Workspace/mnist/fpga/src/fc2_layer.sv
   D:/IC_Workspace/mnist/fpga/src/line_buffer.sv
-  D:/IC_Workspace/mnist/fpga/src/mac_3x3.sv
-  D:/IC_Workspace/mnist/fpga/src/mac_3x3x32.sv
   D:/IC_Workspace/mnist/fpga/src/maxpool_layer.sv
+  D:/IC_Workspace/mnist/fpga/src/weight_rom.sv
   D:/IC_Workspace/mnist/fpga/src/top_mnist.sv
 }
 OPTRACE "Adding files" END { }
@@ -99,7 +97,7 @@ set_param ips.enableIPCacheLiteLoad 1
 close [open __synthesis_is_running__ w]
 
 OPTRACE "synth_design" START { }
-synth_design -top top_mnist -part xcu50-fsvh2104-2-e
+synth_design -top top_mnist -part xc7z020clg400-1
 OPTRACE "synth_design" END { }
 if { [get_msg_config -count -severity {CRITICAL WARNING}] > 0 } {
  send_msg_id runtcl-6 info "Synthesis results are not added to the cache due to CRITICAL_WARNING"

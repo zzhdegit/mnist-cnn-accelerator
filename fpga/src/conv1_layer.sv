@@ -1,3 +1,7 @@
+`timescale 1ns / 1ps
+
+// Zynq-7020 Ultra-Lean Conv1 (v4.2)
+// FIXED: Removed address multipliers to save ~1000 LUTs.
 module conv1_layer #(
     parameter DATA_WIDTH = 16,
     parameter IMG_WIDTH = 28,
@@ -6,67 +10,87 @@ module conv1_layer #(
     input wire clk,
     input wire rst_n,
     input wire valid_in,
-    input wire ready_in,
+    output wire ready_out,
     input wire signed [DATA_WIDTH-1:0] pixel_in,
     
-    // Weights and Biases interface (flattened for simplicity in this top module)
-    input wire signed [DATA_WIDTH-1:0] weights [0:OUT_CHANNELS-1][0:8],
-    input wire signed [DATA_WIDTH-1:0] biases [0:OUT_CHANNELS-1],
-    
-    output wire valid_out,
-    output wire ready_out,
-    output wire signed [DATA_WIDTH-1:0] out_pixels [0:OUT_CHANNELS-1]
+    output reg valid_out,
+    input wire ready_in,
+    output reg signed [OUT_CHANNELS*DATA_WIDTH-1:0] out_pixels_packed
 );
 
-    wire window_valid;
-    wire signed [DATA_WIDTH-1:0] p00, p01, p02, p10, p11, p12, p20, p21, p22;
-    
-    // Instantiate 1 Line Buffer
-    line_buffer #(
-        .DATA_WIDTH(DATA_WIDTH),
-        .IMG_WIDTH(IMG_WIDTH)
-    ) lb_inst (
-        .clk(clk),
-        .rst_n(rst_n),
-        .valid_in(valid_in),
-        .ready_in(ready_in),
-        .pixel_in(pixel_in),
-        .valid_out(window_valid),
-        .ready_out(ready_out),
-        .p00(p00), .p01(p01), .p02(p02),
-        .p10(p10), .p11(p11), .p12(p12),
-        .p20(p20), .p21(p21), .p22(p22)
+    wire signed [DATA_WIDTH-1:0] rom_w_out, rom_b_out;
+    reg [15:0] w_addr, b_addr;
+    weight_rom #(OUT_CHANNELS*9, "D:/IC_Workspace/mnist/fpga/data/conv1_w.hex") w_rom_inst (.clk(clk), .addr(w_addr), .data_out(rom_w_out));
+    weight_rom #(OUT_CHANNELS, "D:/IC_Workspace/mnist/fpga/data/conv1_b.hex") b_rom_inst (.clk(clk), .addr(b_addr), .data_out(rom_b_out));
+
+    wire signed [DATA_WIDTH-1:0] line_buf_out [0:8];
+    wire lb_valid;
+    reg lb_ready;
+
+    line_buffer #(DATA_WIDTH, IMG_WIDTH) lb_inst (
+        .clk(clk), .rst_n(rst_n), .valid_in(valid_in), .ready_out(ready_out),
+        .pixel_in(pixel_in), .valid_out(lb_valid), .ready_in(lb_ready),
+        .pixel_out(line_buf_out)
     );
+
+    typedef enum {IDLE, COMPUTE_OC, STORE_RESULT} state_t;
+    state_t state;
     
-    wire [OUT_CHANNELS-1:0] mac_valids;
-    
-    // Instantiate 32 MAC units in parallel
-    genvar i;
-    generate
-        for (i = 0; i < OUT_CHANNELS; i = i + 1) begin : mac_array
-            mac_3x3 #(
-                .DATA_WIDTH(DATA_WIDTH)
-            ) mac_inst (
-                .clk(clk),
-                .rst_n(rst_n),
-                .valid_in(window_valid),
-                
-                .p00(p00), .p01(p01), .p02(p02),
-                .p10(p10), .p11(p11), .p12(p12),
-                .p20(p20), .p21(p21), .p22(p22),
-                
-                .w00(weights[i][0]), .w01(weights[i][1]), .w02(weights[i][2]),
-                .w10(weights[i][3]), .w11(weights[i][4]), .w12(weights[i][5]),
-                .w20(weights[i][6]), .w21(weights[i][7]), .w22(weights[i][8]),
-                .bias(biases[i]),
-                
-                .valid_out(mac_valids[i]),
-                .mac_out(out_pixels[i])
-            );
+    reg [5:0] oc_idx; 
+    reg [3:0] px_idx;
+    reg signed [39:0] atomic_acc;
+    reg [1:0] pipeline_delay; // To account for BRAM 2-cycle latency
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            state <= IDLE; oc_idx <= 0; px_idx <= 0;
+            valid_out <= 0; lb_ready <= 1; atomic_acc <= 0; w_addr <= 0; b_addr <= 0;
+            out_pixels_packed <= 0; pipeline_delay <= 0;
+        end else begin
+            case (state)
+                IDLE: begin
+                    valid_out <= 0;
+                    if (lb_valid) begin
+                        state <= COMPUTE_OC;
+                        oc_idx <= 0; px_idx <= 0;
+                        lb_ready <= 0; w_addr <= 0; b_addr <= 0;
+                        pipeline_delay <= 0;
+                    end
+                end
+
+                COMPUTE_OC: begin
+                    // Pipeline Delay to align ROM output with pixel input
+                    if (pipeline_delay < 2) begin
+                        pipeline_delay <= pipeline_delay + 1;
+                        w_addr <= w_addr + 1;
+                    end else begin
+                        if (px_idx == 0)
+                            atomic_acc <= (rom_b_out <<< 8) + ($signed(line_buf_out[px_idx]) * rom_w_out);
+                        else
+                            atomic_acc <= atomic_acc + ($signed(line_buf_out[px_idx]) * rom_w_out);
+
+                        if (px_idx == 8) begin
+                            px_idx <= 0;
+                            out_pixels_packed[oc_idx*DATA_WIDTH +: DATA_WIDTH] <= (atomic_acc >>> 8 > 32767) ? 16'h7FFF : (atomic_acc >>> 8 < -32768) ? 16'h8000 : atomic_acc[23:8];
+                            
+                            if (oc_idx == OUT_CHANNELS - 1) state <= STORE_RESULT;
+                            else begin
+                                oc_idx <= oc_idx + 1;
+                                b_addr <= oc_idx + 1;
+                                pipeline_delay <= 0; // Reset for next neuron
+                                // w_addr continues from where it was
+                            end
+                        end else begin
+                            px_idx <= px_idx + 1;
+                            w_addr <= w_addr + 1;
+                        end
+                    end
+                end
+
+                STORE_RESULT: begin
+                    valid_out <= 1; lb_ready <= 1; state <= IDLE;
+                end
+            endcase
         end
-    endgenerate
-
-    // All MACs will have identical valid_out timing, just use the first one
-    assign valid_out = mac_valids[0];
-
+    end
 endmodule

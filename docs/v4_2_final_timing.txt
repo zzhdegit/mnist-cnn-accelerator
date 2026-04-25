@@ -1,0 +1,554 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2024.2 (win64) Build 5239630 Fri Nov 08 22:35:27 MST 2024
+| Date         : Sat Apr 25 10:51:09 2026
+| Host         : DESKTOP-T66FGJ1 running 64-bit major release  (build 9200)
+| Command      : report_timing_summary -file ../../docs/v4_2_final_timing.txt
+| Design       : top_mnist
+| Device       : 7z020-clg400
+| Speed File   : -1  PRODUCTION 1.12 2019-11-22
+| Design State : Routed
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Timing Summary Report
+
+------------------------------------------------------------------------------------------------
+| Timer Settings
+| --------------
+------------------------------------------------------------------------------------------------
+
+  Enable Multi Corner Analysis               :  Yes
+  Enable Pessimism Removal                   :  Yes
+  Pessimism Removal Resolution               :  Nearest Common Node
+  Enable Input Delay Default Clock           :  No
+  Enable Preset / Clear Arcs                 :  No
+  Disable Flight Delays                      :  No
+  Ignore I/O Paths                           :  No
+  Timing Early Launch at Borrowing Latches   :  No
+  Borrow Time for Max Delay Exceptions       :  Yes
+  Merge Timing Exceptions                    :  Yes
+  Inter-SLR Compensation                     :  Conservative
+
+  Corner  Analyze    Analyze    
+  Name    Max Paths  Min Paths  
+  ------  ---------  ---------  
+  Slow    Yes        Yes        
+  Fast    Yes        Yes        
+
+
+------------------------------------------------------------------------------------------------
+| Report Methodology
+| ------------------
+------------------------------------------------------------------------------------------------
+
+No report available as report_methodology has not been run prior. Run report_methodology on the current design for the summary of methodology violations.
+
+
+
+check_timing report
+
+Table of Contents
+-----------------
+1. checking no_clock (0)
+2. checking constant_clock (0)
+3. checking pulse_width_clock (0)
+4. checking unconstrained_internal_endpoints (0)
+5. checking no_input_delay (1)
+6. checking no_output_delay (20)
+7. checking multiple_clock (0)
+8. checking generated_clocks (0)
+9. checking loops (0)
+10. checking partial_input_delay (0)
+11. checking partial_output_delay (0)
+12. checking latch_loops (0)
+
+1. checking no_clock (0)
+------------------------
+ There are 0 register/latch pins with no clock.
+
+
+2. checking constant_clock (0)
+------------------------------
+ There are 0 register/latch pins with constant_clock.
+
+
+3. checking pulse_width_clock (0)
+---------------------------------
+ There are 0 register/latch pins which need pulse_width check
+
+
+4. checking unconstrained_internal_endpoints (0)
+------------------------------------------------
+ There are 0 pins that are not constrained for maximum delay.
+
+ There are 0 pins that are not constrained for maximum delay due to constant clock.
+
+
+5. checking no_input_delay (1)
+------------------------------
+ There is 1 input port with no input delay specified. (HIGH)
+
+ There are 0 input ports with no input delay but user has a false path constraint.
+
+
+6. checking no_output_delay (20)
+--------------------------------
+ There are 20 ports with no output delay specified. (HIGH)
+
+ There are 0 ports with no output delay but user has a false path constraint
+
+ There are 0 ports with no output delay but with a timing clock defined on it or propagating through it
+
+
+7. checking multiple_clock (0)
+------------------------------
+ There are 0 register/latch pins with multiple clocks.
+
+
+8. checking generated_clocks (0)
+--------------------------------
+ There are 0 generated clocks that are not connected to a clock source.
+
+
+9. checking loops (0)
+---------------------
+ There are 0 combinational loops in the design.
+
+
+10. checking partial_input_delay (0)
+------------------------------------
+ There are 0 input ports with partial input delay specified.
+
+
+11. checking partial_output_delay (0)
+-------------------------------------
+ There are 0 ports with partial output delay specified.
+
+
+12. checking latch_loops (0)
+----------------------------
+ There are 0 combinational latch loops in the design through latch input
+
+
+
+------------------------------------------------------------------------------------------------
+| Design Timing Summary
+| ---------------------
+------------------------------------------------------------------------------------------------
+
+    WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints     WPWS(ns)     TPWS(ns)  TPWS Failing Endpoints  TPWS Total Endpoints  
+    -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------     --------     --------  ----------------------  --------------------  
+    -42.964  -217003.234                  35574                86678       -0.048       -0.383                      8                86678        4.020        0.000                       0                 42879  
+
+
+Timing constraints are not met.
+
+
+------------------------------------------------------------------------------------------------
+| Clock Summary
+| -------------
+------------------------------------------------------------------------------------------------
+
+Clock  Waveform(ns)       Period(ns)      Frequency(MHz)
+-----  ------------       ----------      --------------
+clk    {0.000 5.000}      10.000          100.000         
+
+
+------------------------------------------------------------------------------------------------
+| Intra Clock Table
+| -----------------
+------------------------------------------------------------------------------------------------
+
+Clock             WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints     WPWS(ns)     TPWS(ns)  TPWS Failing Endpoints  TPWS Total Endpoints  
+-----             -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------     --------     --------  ----------------------  --------------------  
+clk               -42.964  -217003.234                  35574                86678       -0.048       -0.383                      8                86678        4.020        0.000                       0                 42879  
+
+
+------------------------------------------------------------------------------------------------
+| Inter Clock Table
+| -----------------
+------------------------------------------------------------------------------------------------
+
+From Clock    To Clock          WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints  
+----------    --------          -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------  
+
+
+------------------------------------------------------------------------------------------------
+| Other Path Groups Table
+| -----------------------
+------------------------------------------------------------------------------------------------
+
+Path Group    From Clock    To Clock          WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints  
+----------    ----------    --------          -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------  
+
+
+------------------------------------------------------------------------------------------------
+| Timing Details
+| --------------
+------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------
+From Clock:  clk
+  To Clock:  clk
+
+Setup :        35574  Failing Endpoints,  Worst Slack      -42.964ns,  Total Violation  -217003.239ns
+Hold  :            8  Failing Endpoints,  Worst Slack       -0.048ns,  Total Violation       -0.383ns
+PW    :            0  Failing Endpoints,  Worst Slack        4.020ns,  Total Violation        0.000ns
+---------------------------------------------------------------------------------------------------
+
+
+Max Delay Paths
+--------------------------------------------------------------------------------------
+Slack (VIOLATED) :        -42.964ns  (required time - arrival time)
+  Source:                 avg_pool_inst/channel_sums_reg[1][1]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Destination:            avg_pool_inst/pixel_out_reg[30]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            10.000ns  (clk rise@10.000ns - clk rise@0.000ns)
+  Data Path Delay:        52.838ns  (logic 31.638ns (59.878%)  route 21.200ns (40.122%))
+  Logic Levels:           84  (CARRY4=58 LUT1=1 LUT2=24 LUT3=1)
+  Clock Path Skew:        -0.122ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    4.692ns = ( 14.692 - 10.000 ) 
+    Source Clock Delay      (SCD):    5.289ns
+    Clock Pessimism Removal (CPR):    0.475ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+    U7                                                0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+    U7                   IBUF (Prop_ibuf_I_O)         1.058     1.058 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           2.171     3.229    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.101     3.330 r  clk_IBUF_BUFG_inst/O
+                         net (fo=42884, routed)       1.959     5.289    avg_pool_inst/clk_IBUF_BUFG
+    SLICE_X90Y127        FDCE                                         r  avg_pool_inst/channel_sums_reg[1][1]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X90Y127        FDCE (Prop_fdce_C_Q)         0.478     5.767 f  avg_pool_inst/channel_sums_reg[1][1]/Q
+                         net (fo=3, routed)           0.923     6.690    avg_pool_inst/channel_sums_reg_n_0_[1][1]
+    SLICE_X87Y125        LUT1 (Prop_lut1_I0_O)        0.295     6.985 r  avg_pool_inst/pixel_out[21]_i_16__0/O
+                         net (fo=1, routed)           0.000     6.985    avg_pool_inst/pixel_out[21]_i_16__0_n_0
+    SLICE_X87Y125        CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.532     7.517 r  avg_pool_inst/pixel_out_reg[21]_i_11/CO[3]
+                         net (fo=1, routed)           0.000     7.517    avg_pool_inst/pixel_out_reg[21]_i_11_n_0
+    SLICE_X87Y126        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.114     7.631 r  avg_pool_inst/pixel_out_reg[25]_i_11/CO[3]
+                         net (fo=1, routed)           0.000     7.631    avg_pool_inst/pixel_out_reg[25]_i_11_n_0
+    SLICE_X87Y127        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.114     7.745 r  avg_pool_inst/pixel_out_reg[29]_i_11/CO[3]
+                         net (fo=1, routed)           0.000     7.745    avg_pool_inst/pixel_out_reg[29]_i_11_n_0
+    SLICE_X87Y128        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.114     7.859 r  avg_pool_inst/pixel_out_reg[31]_i_20/CO[3]
+                         net (fo=1, routed)           0.000     7.859    avg_pool_inst/pixel_out_reg[31]_i_20_n_0
+    SLICE_X87Y129        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.114     7.973 r  avg_pool_inst/pixel_out_reg[31]_i_61/CO[3]
+                         net (fo=1, routed)           0.000     7.973    avg_pool_inst/pixel_out_reg[31]_i_61_n_0
+    SLICE_X87Y130        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.114     8.087 f  avg_pool_inst/pixel_out_reg[31]_i_71/CO[3]
+                         net (fo=15, routed)          0.889     8.976    avg_pool_inst/pixel_out_reg[31]_i_71_n_0
+    SLICE_X93Y130        LUT2 (Prop_lut2_I1_O)        0.124     9.100 r  avg_pool_inst/pixel_out[31]_i_88/O
+                         net (fo=1, routed)           0.496     9.596    avg_pool_inst/pixel_out[31]_i_88_n_0
+    SLICE_X95Y130        CARRY4 (Prop_carry4_CYINIT_CO[3])
+                                                      0.580    10.176 r  avg_pool_inst/pixel_out_reg[31]_i_76/CO[3]
+                         net (fo=1, routed)           0.000    10.176    avg_pool_inst/pixel_out_reg[31]_i_76_n_0
+    SLICE_X95Y131        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.271    10.447 r  avg_pool_inst/pixel_out_reg[31]_i_62/CO[0]
+                         net (fo=10, routed)          0.628    11.076    avg_pool_inst/pixel_out_reg[31]_i_62_n_3
+    SLICE_X94Y130        LUT2 (Prop_lut2_I0_O)        0.373    11.449 r  avg_pool_inst/pixel_out[31]_i_83__0/O
+                         net (fo=1, routed)           0.000    11.449    avg_pool_inst/pixel_out[31]_i_83__0_n_0
+    SLICE_X94Y130        CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    11.982 r  avg_pool_inst/pixel_out_reg[31]_i_63/CO[3]
+                         net (fo=1, routed)           0.000    11.982    avg_pool_inst/pixel_out_reg[31]_i_63_n_0
+    SLICE_X94Y131        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    12.236 r  avg_pool_inst/pixel_out_reg[31]_i_52/CO[0]
+                         net (fo=10, routed)          0.971    13.206    avg_pool_inst/pixel_out_reg[31]_i_52_n_3
+    SLICE_X90Y129        LUT2 (Prop_lut2_I0_O)        0.367    13.573 r  avg_pool_inst/pixel_out[31]_i_69__0/O
+                         net (fo=1, routed)           0.000    13.573    avg_pool_inst/pixel_out[31]_i_69__0_n_0
+    SLICE_X90Y129        CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    14.106 r  avg_pool_inst/pixel_out_reg[31]_i_53/CO[3]
+                         net (fo=1, routed)           0.000    14.106    avg_pool_inst/pixel_out_reg[31]_i_53_n_0
+    SLICE_X90Y130        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    14.360 r  avg_pool_inst/pixel_out_reg[31]_i_41/CO[0]
+                         net (fo=10, routed)          0.883    15.243    avg_pool_inst/pixel_out_reg[31]_i_41_n_3
+    SLICE_X88Y129        LUT2 (Prop_lut2_I0_O)        0.367    15.610 r  avg_pool_inst/pixel_out[31]_i_59/O
+                         net (fo=1, routed)           0.000    15.610    avg_pool_inst/pixel_out[31]_i_59_n_0
+    SLICE_X88Y129        CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.550    16.160 r  avg_pool_inst/pixel_out_reg[31]_i_42/CO[3]
+                         net (fo=1, routed)           0.000    16.160    avg_pool_inst/pixel_out_reg[31]_i_42_n_0
+    SLICE_X88Y130        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.271    16.431 r  avg_pool_inst/pixel_out_reg[31]_i_27/CO[0]
+                         net (fo=10, routed)          0.764    17.195    avg_pool_inst/pixel_out_reg[31]_i_27_n_3
+    SLICE_X88Y127        LUT2 (Prop_lut2_I0_O)        0.373    17.568 r  avg_pool_inst/pixel_out[30]_i_18__0/O
+                         net (fo=1, routed)           0.000    17.568    avg_pool_inst/pixel_out[30]_i_18__0_n_0
+    SLICE_X88Y127        CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.550    18.118 r  avg_pool_inst/pixel_out_reg[30]_i_12/CO[3]
+                         net (fo=1, routed)           0.000    18.118    avg_pool_inst/pixel_out_reg[30]_i_12_n_0
+    SLICE_X88Y128        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.271    18.389 r  avg_pool_inst/pixel_out_reg[30]_i_11/CO[0]
+                         net (fo=10, routed)          0.664    19.053    avg_pool_inst/pixel_out_reg[30]_i_11_n_3
+    SLICE_X86Y127        LUT2 (Prop_lut2_I0_O)        0.373    19.426 r  avg_pool_inst/pixel_out[31]_i_50__0/O
+                         net (fo=1, routed)           0.000    19.426    avg_pool_inst/pixel_out[31]_i_50__0_n_0
+    SLICE_X86Y127        CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    19.959 r  avg_pool_inst/pixel_out_reg[31]_i_35/CO[3]
+                         net (fo=1, routed)           0.000    19.959    avg_pool_inst/pixel_out_reg[31]_i_35_n_0
+    SLICE_X86Y128        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    20.213 r  avg_pool_inst/pixel_out_reg[31]_i_28/CO[0]
+                         net (fo=10, routed)          0.773    20.986    avg_pool_inst/pixel_out_reg[31]_i_28_n_3
+    SLICE_X85Y128        LUT2 (Prop_lut2_I0_O)        0.367    21.353 r  avg_pool_inst/pixel_out[31]_i_39__0/O
+                         net (fo=1, routed)           0.000    21.353    avg_pool_inst/pixel_out[31]_i_39__0_n_0
+    SLICE_X85Y128        CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.550    21.903 r  avg_pool_inst/pixel_out_reg[31]_i_21/CO[3]
+                         net (fo=1, routed)           0.000    21.903    avg_pool_inst/pixel_out_reg[31]_i_21_n_0
+    SLICE_X85Y129        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.271    22.174 r  avg_pool_inst/pixel_out_reg[31]_i_17/CO[0]
+                         net (fo=10, routed)          0.718    22.892    avg_pool_inst/pixel_out_reg[31]_i_17_n_3
+    SLICE_X86Y129        LUT2 (Prop_lut2_I0_O)        0.373    23.265 r  avg_pool_inst/pixel_out[31]_i_25__0/O
+                         net (fo=1, routed)           0.000    23.265    avg_pool_inst/pixel_out[31]_i_25__0_n_0
+    SLICE_X86Y129        CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    23.798 r  avg_pool_inst/pixel_out_reg[31]_i_11/CO[3]
+                         net (fo=1, routed)           0.000    23.798    avg_pool_inst/pixel_out_reg[31]_i_11_n_0
+    SLICE_X86Y130        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    24.052 r  avg_pool_inst/pixel_out_reg[31]_i_8/CO[0]
+                         net (fo=10, routed)          0.781    24.833    avg_pool_inst/pixel_out_reg[31]_i_8_n_3
+    SLICE_X84Y128        LUT2 (Prop_lut2_I0_O)        0.367    25.200 r  avg_pool_inst/pixel_out[31]_i_15__0/O
+                         net (fo=1, routed)           0.000    25.200    avg_pool_inst/pixel_out[31]_i_15__0_n_0
+    SLICE_X84Y128        CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.550    25.750 r  avg_pool_inst/pixel_out_reg[31]_i_7/CO[3]
+                         net (fo=1, routed)           0.000    25.750    avg_pool_inst/pixel_out_reg[31]_i_7_n_0
+    SLICE_X84Y129        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.271    26.021 r  avg_pool_inst/pixel_out_reg[31]_i_3__0/CO[0]
+                         net (fo=12, routed)          0.854    26.875    avg_pool_inst/pixel_out_reg[31]_i_3__0_n_3
+    SLICE_X83Y128        LUT2 (Prop_lut2_I0_O)        0.373    27.248 r  avg_pool_inst/pixel_out[30]_i_10__0/O
+                         net (fo=1, routed)           0.000    27.248    avg_pool_inst/pixel_out[30]_i_10__0_n_0
+    SLICE_X83Y128        CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.532    27.780 r  avg_pool_inst/pixel_out_reg[30]_i_3/CO[3]
+                         net (fo=1, routed)           0.000    27.780    avg_pool_inst/pixel_out_reg[30]_i_3_n_0
+    SLICE_X83Y129        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.271    28.051 r  avg_pool_inst/pixel_out_reg[30]_i_2/CO[0]
+                         net (fo=12, routed)          0.798    28.849    avg_pool_inst/pixel_out_reg[30]_i_2_n_3
+    SLICE_X82Y128        LUT2 (Prop_lut2_I0_O)        0.373    29.222 r  avg_pool_inst/pixel_out[29]_i_10__0/O
+                         net (fo=1, routed)           0.000    29.222    avg_pool_inst/pixel_out[29]_i_10__0_n_0
+    SLICE_X82Y128        CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.513    29.735 r  avg_pool_inst/pixel_out_reg[29]_i_3/CO[3]
+                         net (fo=1, routed)           0.000    29.735    avg_pool_inst/pixel_out_reg[29]_i_3_n_0
+    SLICE_X82Y129        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    29.989 r  avg_pool_inst/pixel_out_reg[29]_i_2/CO[0]
+                         net (fo=12, routed)          0.701    30.690    avg_pool_inst/pixel_out_reg[29]_i_2_n_3
+    SLICE_X80Y128        LUT2 (Prop_lut2_I0_O)        0.367    31.057 r  avg_pool_inst/pixel_out[28]_i_14__0/O
+                         net (fo=1, routed)           0.000    31.057    avg_pool_inst/pixel_out[28]_i_14__0_n_0
+    SLICE_X80Y128        CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.550    31.607 r  avg_pool_inst/pixel_out_reg[28]_i_8__0/CO[3]
+                         net (fo=1, routed)           0.000    31.607    avg_pool_inst/pixel_out_reg[28]_i_8__0_n_0
+    SLICE_X80Y129        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.271    31.878 r  avg_pool_inst/pixel_out_reg[28]_i_3/CO[0]
+                         net (fo=12, routed)          0.964    32.843    avg_pool_inst/pixel_out_reg[28]_i_3_n_3
+    SLICE_X80Y126        LUT2 (Prop_lut2_I0_O)        0.373    33.216 r  avg_pool_inst/pixel_out[27]_i_9/O
+                         net (fo=1, routed)           0.000    33.216    avg_pool_inst/pixel_out[27]_i_9_n_0
+    SLICE_X80Y126        CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.550    33.766 r  avg_pool_inst/pixel_out_reg[27]_i_3/CO[3]
+                         net (fo=1, routed)           0.000    33.766    avg_pool_inst/pixel_out_reg[27]_i_3_n_0
+    SLICE_X80Y127        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.271    34.037 r  avg_pool_inst/pixel_out_reg[27]_i_2/CO[0]
+                         net (fo=12, routed)          0.632    34.668    avg_pool_inst/pixel_out_reg[27]_i_2_n_3
+    SLICE_X81Y126        LUT2 (Prop_lut2_I0_O)        0.373    35.041 r  avg_pool_inst/pixel_out[26]_i_10__0/O
+                         net (fo=1, routed)           0.000    35.041    avg_pool_inst/pixel_out[26]_i_10__0_n_0
+    SLICE_X81Y126        CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.532    35.573 r  avg_pool_inst/pixel_out_reg[26]_i_3/CO[3]
+                         net (fo=1, routed)           0.000    35.573    avg_pool_inst/pixel_out_reg[26]_i_3_n_0
+    SLICE_X81Y127        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.271    35.844 r  avg_pool_inst/pixel_out_reg[26]_i_2/CO[0]
+                         net (fo=12, routed)          0.847    36.691    avg_pool_inst/pixel_out_reg[26]_i_2_n_3
+    SLICE_X82Y126        LUT2 (Prop_lut2_I0_O)        0.373    37.064 r  avg_pool_inst/pixel_out[25]_i_9/O
+                         net (fo=1, routed)           0.000    37.064    avg_pool_inst/pixel_out[25]_i_9_n_0
+    SLICE_X82Y126        CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    37.597 r  avg_pool_inst/pixel_out_reg[25]_i_3/CO[3]
+                         net (fo=1, routed)           0.000    37.597    avg_pool_inst/pixel_out_reg[25]_i_3_n_0
+    SLICE_X82Y127        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    37.851 r  avg_pool_inst/pixel_out_reg[25]_i_2/CO[0]
+                         net (fo=12, routed)          0.646    38.497    avg_pool_inst/pixel_out_reg[25]_i_2_n_3
+    SLICE_X83Y126        LUT2 (Prop_lut2_I0_O)        0.367    38.864 r  avg_pool_inst/pixel_out[24]_i_14__0/O
+                         net (fo=1, routed)           0.000    38.864    avg_pool_inst/pixel_out[24]_i_14__0_n_0
+    SLICE_X83Y126        CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.550    39.414 r  avg_pool_inst/pixel_out_reg[24]_i_8__0/CO[3]
+                         net (fo=1, routed)           0.000    39.414    avg_pool_inst/pixel_out_reg[24]_i_8__0_n_0
+    SLICE_X83Y127        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.271    39.685 r  avg_pool_inst/pixel_out_reg[24]_i_3/CO[0]
+                         net (fo=12, routed)          0.846    40.531    avg_pool_inst/pixel_out_reg[24]_i_3_n_3
+    SLICE_X82Y124        LUT2 (Prop_lut2_I0_O)        0.373    40.904 r  avg_pool_inst/pixel_out[23]_i_9/O
+                         net (fo=1, routed)           0.000    40.904    avg_pool_inst/pixel_out[23]_i_9_n_0
+    SLICE_X82Y124        CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    41.437 r  avg_pool_inst/pixel_out_reg[23]_i_3/CO[3]
+                         net (fo=1, routed)           0.009    41.446    avg_pool_inst/pixel_out_reg[23]_i_3_n_0
+    SLICE_X82Y125        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    41.700 r  avg_pool_inst/pixel_out_reg[23]_i_2/CO[0]
+                         net (fo=12, routed)          0.739    42.439    avg_pool_inst/pixel_out_reg[23]_i_2_n_3
+    SLICE_X84Y125        LUT2 (Prop_lut2_I0_O)        0.367    42.806 r  avg_pool_inst/pixel_out[22]_i_9/O
+                         net (fo=1, routed)           0.000    42.806    avg_pool_inst/pixel_out[22]_i_9_n_0
+    SLICE_X84Y125        CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.550    43.356 r  avg_pool_inst/pixel_out_reg[22]_i_3/CO[3]
+                         net (fo=1, routed)           0.000    43.356    avg_pool_inst/pixel_out_reg[22]_i_3_n_0
+    SLICE_X84Y126        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.271    43.627 r  avg_pool_inst/pixel_out_reg[22]_i_2/CO[0]
+                         net (fo=12, routed)          0.665    44.291    avg_pool_inst/pixel_out_reg[22]_i_2_n_3
+    SLICE_X85Y125        LUT2 (Prop_lut2_I0_O)        0.373    44.664 r  avg_pool_inst/pixel_out[21]_i_9/O
+                         net (fo=1, routed)           0.000    44.664    avg_pool_inst/pixel_out[21]_i_9_n_0
+    SLICE_X85Y125        CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.550    45.214 r  avg_pool_inst/pixel_out_reg[21]_i_3/CO[3]
+                         net (fo=1, routed)           0.000    45.214    avg_pool_inst/pixel_out_reg[21]_i_3_n_0
+    SLICE_X85Y126        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.271    45.485 r  avg_pool_inst/pixel_out_reg[21]_i_2/CO[0]
+                         net (fo=12, routed)          0.973    46.459    avg_pool_inst/pixel_out_reg[21]_i_2_n_3
+    SLICE_X84Y123        LUT2 (Prop_lut2_I0_O)        0.373    46.832 r  avg_pool_inst/pixel_out[20]_i_14__0/O
+                         net (fo=1, routed)           0.000    46.832    avg_pool_inst/pixel_out[20]_i_14__0_n_0
+    SLICE_X84Y123        CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.550    47.382 r  avg_pool_inst/pixel_out_reg[20]_i_8__0/CO[3]
+                         net (fo=1, routed)           0.000    47.382    avg_pool_inst/pixel_out_reg[20]_i_8__0_n_0
+    SLICE_X84Y124        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.271    47.653 r  avg_pool_inst/pixel_out_reg[20]_i_3/CO[0]
+                         net (fo=12, routed)          0.632    48.285    avg_pool_inst/pixel_out_reg[20]_i_3_n_3
+    SLICE_X81Y124        LUT2 (Prop_lut2_I0_O)        0.373    48.658 r  avg_pool_inst/pixel_out[19]_i_9/O
+                         net (fo=1, routed)           0.000    48.658    avg_pool_inst/pixel_out[19]_i_9_n_0
+    SLICE_X81Y124        CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.550    49.208 r  avg_pool_inst/pixel_out_reg[19]_i_3/CO[3]
+                         net (fo=1, routed)           0.009    49.217    avg_pool_inst/pixel_out_reg[19]_i_3_n_0
+    SLICE_X81Y125        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.271    49.488 r  avg_pool_inst/pixel_out_reg[19]_i_2/CO[0]
+                         net (fo=12, routed)          0.690    50.178    avg_pool_inst/pixel_out_reg[19]_i_2_n_3
+    SLICE_X80Y123        LUT2 (Prop_lut2_I0_O)        0.373    50.551 r  avg_pool_inst/pixel_out[18]_i_8/O
+                         net (fo=1, routed)           0.000    50.551    avg_pool_inst/pixel_out[18]_i_8_n_0
+    SLICE_X80Y123        CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.550    51.101 r  avg_pool_inst/pixel_out_reg[18]_i_3/CO[3]
+                         net (fo=1, routed)           0.000    51.101    avg_pool_inst/pixel_out_reg[18]_i_3_n_0
+    SLICE_X80Y124        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.271    51.372 r  avg_pool_inst/pixel_out_reg[18]_i_2/CO[0]
+                         net (fo=11, routed)          0.885    52.256    avg_pool_inst/pixel_out_reg[18]_i_2_n_3
+    SLICE_X81Y122        LUT2 (Prop_lut2_I0_O)        0.373    52.629 r  avg_pool_inst/pixel_out[17]_i_8/O
+                         net (fo=1, routed)           0.000    52.629    avg_pool_inst/pixel_out[17]_i_8_n_0
+    SLICE_X81Y122        CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.550    53.179 r  avg_pool_inst/pixel_out_reg[17]_i_3/CO[3]
+                         net (fo=1, routed)           0.000    53.179    avg_pool_inst/pixel_out_reg[17]_i_3_n_0
+    SLICE_X81Y123        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.271    53.450 r  avg_pool_inst/pixel_out_reg[17]_i_2/CO[0]
+                         net (fo=11, routed)          0.834    54.284    avg_pool_inst/pixel_out_reg[17]_i_2_n_3
+    SLICE_X82Y122        LUT2 (Prop_lut2_I0_O)        0.373    54.657 r  avg_pool_inst/pixel_out[16]_i_7/O
+                         net (fo=1, routed)           0.000    54.657    avg_pool_inst/pixel_out[16]_i_7_n_0
+    SLICE_X82Y122        CARRY4 (Prop_carry4_S[1]_CO[3])
+                                                      0.533    55.190 r  avg_pool_inst/pixel_out_reg[16]_i_2/CO[3]
+                         net (fo=1, routed)           0.000    55.190    avg_pool_inst/pixel_out_reg[16]_i_2_n_0
+    SLICE_X82Y123        CARRY4 (Prop_carry4_CI_O[1])
+                                                      0.323    55.513 r  avg_pool_inst/pixel_out_reg[16]_i_1/O[1]
+                         net (fo=1, routed)           0.477    55.990    avg_pool_inst/pixel_out_reg[16]_i_1_n_6
+    SLICE_X83Y122        CARRY4 (Prop_carry4_CYINIT_CO[3])
+                                                      0.762    56.752 r  avg_pool_inst/pixel_out_reg[20]_i_2/CO[3]
+                         net (fo=1, routed)           0.000    56.752    avg_pool_inst/pixel_out_reg[20]_i_2_n_0
+    SLICE_X83Y123        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.114    56.866 r  avg_pool_inst/pixel_out_reg[24]_i_2/CO[3]
+                         net (fo=1, routed)           0.000    56.866    avg_pool_inst/pixel_out_reg[24]_i_2_n_0
+    SLICE_X83Y124        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.114    56.980 r  avg_pool_inst/pixel_out_reg[28]_i_2/CO[3]
+                         net (fo=1, routed)           0.009    56.989    avg_pool_inst/pixel_out_reg[28]_i_2_n_0
+    SLICE_X83Y125        CARRY4 (Prop_carry4_CI_O[1])
+                                                      0.334    57.323 r  avg_pool_inst/pixel_out_reg[31]_i_2__0/O[1]
+                         net (fo=1, routed)           0.501    57.824    avg_pool_inst/pixel_out_reg[31]_i_2__0_n_6
+    SLICE_X80Y125        LUT3 (Prop_lut3_I0_O)        0.303    58.127 r  avg_pool_inst/pixel_out[30]_i_1__0/O
+                         net (fo=1, routed)           0.000    58.127    avg_pool_inst/p_0_out__0[30]
+    SLICE_X80Y125        FDCE                                         r  avg_pool_inst/pixel_out_reg[30]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       10.000    10.000 r  
+    U7                                                0.000    10.000 r  clk (IN)
+                         net (fo=0)                   0.000    10.000    clk
+    U7                   IBUF (Prop_ibuf_I_O)         0.924    10.924 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           1.972    12.896    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.091    12.987 r  clk_IBUF_BUFG_inst/O
+                         net (fo=42884, routed)       1.705    14.692    avg_pool_inst/clk_IBUF_BUFG
+    SLICE_X80Y125        FDCE                                         r  avg_pool_inst/pixel_out_reg[30]/C
+                         clock pessimism              0.475    15.167    
+                         clock uncertainty           -0.035    15.132    
+    SLICE_X80Y125        FDCE (Setup_fdce_C_D)        0.031    15.163    avg_pool_inst/pixel_out_reg[30]
+  -------------------------------------------------------------------
+                         required time                         15.163    
+                         arrival time                         -58.127    
+  -------------------------------------------------------------------
+                         slack                                -42.964    
+
+
+
+
+
+Min Delay Paths
+--------------------------------------------------------------------------------------
+Slack (VIOLATED) :        -0.048ns  (arrival time - required time)
+  Source:                 valid_in
+                            (input port clocked by clk  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Destination:            conv1_inst/lb_inst/shift_reg_reg[0][25][0]/CE
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Path Group:             clk
+  Path Type:              Hold (Min at Slow Process Corner)
+  Requirement:            0.000ns  (clk rise@0.000ns - clk rise@0.000ns)
+  Data Path Delay:        3.151ns  (logic 0.896ns (28.445%)  route 2.255ns (71.555%))
+  Logic Levels:           1  (IBUF=1)
+  Input Delay:            2.000ns
+  Clock Path Skew:        5.162ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    5.162ns
+    Source Clock Delay      (SCD):    0.000ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+                         input delay                  2.000     2.000    
+    Y9                                                0.000     2.000 r  valid_in (IN)
+                         net (fo=0)                   0.000     2.000    valid_in
+    Y9                   IBUF (Prop_ibuf_I_O)         0.896     2.896 r  valid_in_IBUF_inst/O
+                         net (fo=246, routed)         2.255     5.151    conv1_inst/lb_inst/valid_in_IBUF
+    SLICE_X4Y9           FDCE                                         r  conv1_inst/lb_inst/shift_reg_reg[0][25][0]/CE
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)        0.000     0.000 r  
+    U7                                                0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+    U7                   IBUF (Prop_ibuf_I_O)         1.058     1.058 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           2.171     3.229    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.101     3.330 r  clk_IBUF_BUFG_inst/O
+                         net (fo=42884, routed)       1.832     5.162    conv1_inst/lb_inst/clk_IBUF_BUFG
+    SLICE_X4Y9           FDCE                                         r  conv1_inst/lb_inst/shift_reg_reg[0][25][0]/C
+                         clock pessimism              0.000     5.162    
+                         clock uncertainty            0.035     5.198    
+    SLICE_X4Y9           FDCE (Hold_fdce_C_CE)        0.001     5.199    conv1_inst/lb_inst/shift_reg_reg[0][25][0]
+  -------------------------------------------------------------------
+                         required time                         -5.199    
+                         arrival time                           5.151    
+  -------------------------------------------------------------------
+                         slack                                 -0.048    
+
+
+
+
+
+Pulse Width Checks
+--------------------------------------------------------------------------------------
+Clock Name:         clk
+Waveform(ns):       { 0.000 5.000 }
+Period(ns):         10.000
+Sources:            { clk }
+
+Check Type        Corner  Lib Pin      Reference Pin  Required(ns)  Actual(ns)  Slack(ns)  Location    Pin
+Min Period        n/a     DSP48E1/CLK  n/a            3.687         10.000      6.313      DSP48_X2Y6  conv2_inst/atomic_acc/CLK
+Low Pulse Width   Slow    SRLC32E/CLK  n/a            0.980         5.000       4.020      SLICE_X4Y8  conv1_inst/lb_inst/shift_reg_reg[1][1][0]_srl24_conv1_inst_lb_inst_shift_reg_reg_c_22/CLK
+High Pulse Width  Slow    SRLC32E/CLK  n/a            0.980         5.000       4.020      SLICE_X4Y8  conv1_inst/lb_inst/shift_reg_reg[1][1][0]_srl24_conv1_inst_lb_inst_shift_reg_reg_c_22/CLK
+
+
+

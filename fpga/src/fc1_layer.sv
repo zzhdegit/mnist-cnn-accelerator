@@ -1,10 +1,11 @@
 `timescale 1ns / 1ps
 
+// Zynq-7020 Ultra-Lean FC1 (v4.2 - Fixed)
 module fc1_layer #(
     parameter DATA_WIDTH = 16,
     parameter IN_CHANNELS = 64,
     parameter OUT_CHANNELS = 128,
-    parameter IN_PIXELS = 16 // 4x4
+    parameter IN_PIXELS = 1
 )(
     input wire clk,
     input wire rst_n,
@@ -15,71 +16,70 @@ module fc1_layer #(
     output reg signed [DATA_WIDTH-1:0] out_pixels [0:OUT_CHANNELS-1]
 );
 
-    localparam TOTAL_INPUTS = IN_CHANNELS * IN_PIXELS; // 1024
-    localparam TOTAL_WEIGHTS = OUT_CHANNELS * TOTAL_INPUTS; // 131072
+    localparam TOTAL_INPUTS = IN_CHANNELS * IN_PIXELS; 
+    localparam TOTAL_WEIGHTS = OUT_CHANNELS * TOTAL_INPUTS; 
 
-    // Fixed: Using 1D array to bypass Vivado's 2D array bit-count limit (Synth 8-4556)
-    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] weights [0:TOTAL_WEIGHTS-1];
-    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] biases [0:OUT_CHANNELS-1];
+    wire signed [DATA_WIDTH-1:0] rom_w_out, rom_b_out;
+    reg [15:0] w_addr, b_addr;
+    weight_rom #(TOTAL_WEIGHTS, "D:/IC_Workspace/mnist/fpga/data/fc1_w.hex") w_rom_inst (.clk(clk), .addr(w_addr), .data_out(rom_w_out));
+    weight_rom #(OUT_CHANNELS, "D:/IC_Workspace/mnist/fpga/data/fc1_b.hex") b_rom_inst (.clk(clk), .addr(b_addr), .data_out(rom_b_out));
 
-    initial begin
-        $readmemh("D:/IC_Workspace/mnist/fpga/data/fc1_w.hex", weights);
-        $readmemh("D:/IC_Workspace/mnist/fpga/data/fc1_b.hex", biases);
-    end
-
-    reg [10:0] input_cnt;
-    reg signed [39:0] acc [0:OUT_CHANNELS-1];
-    
-    typedef enum {IDLE, ACCUM, FINISH} state_t;
+    typedef enum {IDLE, FETCH_B, COMPUTE_NEURON, STORE_NEURON, FINISH} state_t;
     state_t state;
+    
+    reg [7:0] oc_idx; reg [7:0] ic_idx;
+    reg signed [39:0] acc;
+    reg [1:0] pipeline_delay;
 
-    integer i;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            state <= IDLE;
-            input_cnt <= 0;
-            valid_out <= 0;
-            for (i=0; i<OUT_CHANNELS; i=i+1) acc[i] <= 0;
+            state <= IDLE; oc_idx <= 0; ic_idx <= 0;
+            valid_out <= 0; w_addr <= 0; b_addr <= 0; acc <= 0; pipeline_delay <= 0;
+            for (integer i=0; i<OUT_CHANNELS; i=i+1) out_pixels[i] <= 0;
         end else begin
             case (state)
                 IDLE: begin
                     valid_out <= 0;
                     if (valid_in) begin
-                        for (i=0; i<OUT_CHANNELS; i=i+1) begin
-                            acc[i] <= ($signed(biases[i]) <<< 8); 
-                        end
-                        state <= ACCUM;
-                        input_cnt <= 0;
+                        state <= FETCH_B; oc_idx <= 0; b_addr <= 0; w_addr <= 0;
                     end
                 end
 
-                ACCUM: begin
-                    if (valid_in) begin
-                        for (i=0; i<OUT_CHANNELS; i=i+1) begin
-                            // Optimized Indexing: Flattened 1D weight access
-                            acc[i] <= acc[i] + $signed(pixel_in[ (input_cnt % 64)*DATA_WIDTH +: DATA_WIDTH ]) * weights[i * TOTAL_INPUTS + input_cnt];
-                        end
+                FETCH_B: begin
+                    state <= COMPUTE_NEURON;
+                    ic_idx <= 0; pipeline_delay <= 0;
+                end
+
+                COMPUTE_NEURON: begin
+                    if (pipeline_delay < 2) begin
+                        pipeline_delay <= pipeline_delay + 1;
+                        w_addr <= w_addr + 1;
+                    end else begin
+                        if (ic_idx == 0) acc <= (rom_b_out <<< 8) + ($signed(pixel_in[ic_idx*DATA_WIDTH +: DATA_WIDTH]) * rom_w_out);
+                        else acc <= acc + ($signed(pixel_in[ic_idx*DATA_WIDTH +: DATA_WIDTH]) * rom_w_out);
                         
-                        if (input_cnt == TOTAL_INPUTS - 1) begin
-                            state <= FINISH;
-                        end else begin
-                            input_cnt <= input_cnt + 1;
+                        if (ic_idx == TOTAL_INPUTS - 1) state <= STORE_NEURON;
+                        else begin
+                            ic_idx <= ic_idx + 1;
+                            w_addr <= w_addr + 1;
                         end
+                    end
+                end
+
+                STORE_NEURON: begin
+                    out_pixels[oc_idx] <= (acc >>> 8 > 32767) ? 16'h7FFF : (acc >>> 8 < -32768) ? 16'h8000 : acc[23:8];
+                    if (oc_idx == OUT_CHANNELS - 1) state <= FINISH;
+                    else begin
+                        oc_idx <= oc_idx + 1;
+                        b_addr <= oc_idx + 1;
+                        state <= FETCH_B;
                     end
                 end
 
                 FINISH: begin
-                    for (i=0; i<OUT_CHANNELS; i=i+1) begin
-                        automatic logic signed [39:0] val = acc[i];
-                        if ((val >>> 8) > 32767) out_pixels[i] <= 16'h7FFF;
-                        else if ((val >>> 8) < -32768) out_pixels[i] <= 16'h8000;
-                        else out_pixels[i] <= val[23:8];
-                    end
-                    valid_out <= 1;
-                    state <= IDLE;
+                    valid_out <= 1; state <= IDLE;
                 end
             endcase
         end
     end
-
 endmodule
