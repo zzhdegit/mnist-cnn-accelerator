@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-// Zynq-7020 Ultra-Lean FC1 (v4.2 - Fixed)
+// Zynq-7020 Ultra-Lean FC1 (v5.5 - Corrected Pipeline)
 module fc1_layer #(
     parameter DATA_WIDTH = 16,
     parameter IN_CHANNELS = 64,
@@ -30,12 +30,13 @@ module fc1_layer #(
     reg [7:0] oc_idx; reg [7:0] ic_idx;
     reg signed [39:0] acc;
     reg [1:0] pipeline_delay;
+    reg signed [31:0] prod_reg;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             state <= IDLE; oc_idx <= 0; ic_idx <= 0;
             valid_out <= 0; w_addr <= 0; b_addr <= 0; acc <= 0; pipeline_delay <= 0;
-            for (integer i=0; i<OUT_CHANNELS; i=i+1) out_pixels[i] <= 0;
+            prod_reg <= 0;
         end else begin
             case (state)
                 IDLE: begin
@@ -55,19 +56,27 @@ module fc1_layer #(
                         pipeline_delay <= pipeline_delay + 1;
                         w_addr <= w_addr + 1;
                     end else begin
-                        if (ic_idx == 0) acc <= (rom_b_out <<< 8) + ($signed(pixel_in[ic_idx*DATA_WIDTH +: DATA_WIDTH]) * rom_w_out);
-                        else acc <= acc + ($signed(pixel_in[ic_idx*DATA_WIDTH +: DATA_WIDTH]) * rom_w_out);
+                        // Stage 1: Multiply
+                        prod_reg <= $signed(pixel_in[ic_idx*DATA_WIDTH +: DATA_WIDTH]) * rom_w_out;
                         
-                        if (ic_idx == TOTAL_INPUTS - 1) state <= STORE_NEURON;
-                        else begin
+                        // Stage 2: Accumulate (One cycle behind)
+                        if (ic_idx == 0) begin
+                            acc <= (rom_b_out <<< 8); // Reset with bias
+                        end else begin
+                            acc <= acc + prod_reg;
+                        end
+                        
+                        if (ic_idx == TOTAL_INPUTS) begin // +1 cycle to catch last product
+                            state <= STORE_NEURON;
+                            out_pixels[oc_idx] <= (acc >>> 8 > 32767) ? 16'h7FFF : (acc >>> 8 < -32768) ? 16'h8000 : acc[23:8];
+                        end else begin
                             ic_idx <= ic_idx + 1;
-                            w_addr <= w_addr + 1;
+                            if (ic_idx < TOTAL_INPUTS - 1) w_addr <= w_addr + 1;
                         end
                     end
                 end
 
                 STORE_NEURON: begin
-                    out_pixels[oc_idx] <= (acc >>> 8 > 32767) ? 16'h7FFF : (acc >>> 8 < -32768) ? 16'h8000 : acc[23:8];
                     if (oc_idx == OUT_CHANNELS - 1) state <= FINISH;
                     else begin
                         oc_idx <= oc_idx + 1;
