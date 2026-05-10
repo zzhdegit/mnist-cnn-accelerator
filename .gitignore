@@ -11,6 +11,10 @@ venv/
 # fpga/data/*.hex (Removed to allow submission)
 
 # Vivado / FPGA
+docs/
+fpga/build/
+fpga/scripts/zynq_7020_*_final.tcl
+fpga/data/fc1_w_bank*.hex
 *.log
 *.jou
 *.pb
@@ -18,6 +22,7 @@ venv/
 *.xsim
 *.dir/
 .Xil/
+py/.idea/
 mnist_timing/
 mnist_sim/
 mnist_top_sim/

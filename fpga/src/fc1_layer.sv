@@ -97,7 +97,6 @@ module fc1_layer #(
                         acc <= next_acc;
                         mac_count <= mac_count + 1;
                         if (mac_count == TOTAL_INPUTS - 1) begin
-                            out_pixels[oc_idx] <= sat_relu(next_acc);
                             state <= STORE;
                         end
                     end
@@ -116,6 +115,7 @@ module fc1_layer #(
                 end
 
                 STORE: begin
+                    out_pixels[oc_idx] <= sat_relu(acc);
                     if (oc_idx == OUT_CHANNELS - 1) begin
                         state <= FINISH;
                     end else begin

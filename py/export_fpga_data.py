@@ -1,4 +1,5 @@
 import os
+import argparse
 import numpy as np
 import torch
 import torchvision.transforms as transforms
@@ -16,8 +17,19 @@ def hex_16(v):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Export quantized FPGA MNIST data and golden outputs.")
+    parser.add_argument("--num-images", type=int, default=30, help="number of test images to export")
+    parser.add_argument("--model", default="../mnist_cnn.pt", help="path to trained PyTorch state_dict")
+    parser.add_argument("--data-dir", default=None, help="output directory for FPGA hex files")
+    args = parser.parse_args()
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    model_path = args.model
+    if not os.path.isabs(model_path):
+        model_path = os.path.join(script_dir, model_path)
+
     model = Net()
-    model.load_state_dict(torch.load("mnist_cnn.pt", map_location="cpu", weights_only=True))
+    model.load_state_dict(torch.load(model_path, map_location="cpu", weights_only=True))
     model.eval()
 
     transform = transforms.Compose([
@@ -26,8 +38,11 @@ def main():
     ])
     dataset = datasets.MNIST('data', train=False, transform=transform)
 
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    data_dir = os.path.join(script_dir, '../fpga/data')
+    data_dir = args.data_dir
+    if data_dir is None:
+        data_dir = os.path.join(script_dir, '../fpga/data')
+    if not os.path.isabs(data_dir):
+        data_dir = os.path.join(script_dir, data_dir)
     os.makedirs(data_dir, exist_ok=True)
 
     w1 = to_q8_8(model.conv1.weight.detach().numpy())
@@ -88,8 +103,8 @@ def main():
 
     labels = []
     correct = 0
-    print("Exporting 30 test images and 2x2 MaxPool golden vectors...")
-    for img_idx in range(30):
+    print(f"Exporting {args.num_images} test images and 2x2 MaxPool golden vectors...")
+    for img_idx in range(args.num_images):
         img, label = dataset[img_idx]
         labels.append(label)
         img_q = to_q8_8(img[0].numpy())
@@ -157,11 +172,12 @@ def main():
                 f.write(hex_16(v))
         print(f"Img {img_idx} label={label} pred={pred}")
 
-    with open(os.path.join(data_dir, 'labels_30.hex'), 'w') as f:
+    label_name = f'labels_{args.num_images}.hex'
+    with open(os.path.join(data_dir, label_name), 'w') as f:
         for label in labels:
             f.write(f"{label:X}\n")
 
-    print(f"Export complete: {correct}/30 correct ({correct / 30 * 100:.2f}%).")
+    print(f"Export complete: {correct}/{args.num_images} correct ({correct / args.num_images * 100:.2f}%).")
 
 
 if __name__ == '__main__':

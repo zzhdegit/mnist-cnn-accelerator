@@ -1,7 +1,9 @@
 param(
     [string]$Tag = "iter0_baseline",
     [string]$VivadoBin = "D:\Xilinx\Vivado\2024.2\bin",
-    [string]$DataDir = "D:/IC_Workspace/mnist/fpga/data"
+    [string]$DataDir = "D:/IC_Workspace/mnist/fpga/data",
+    [int]$NImages = 30,
+    [string]$LabelFile = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -18,7 +20,13 @@ if (Test-Path -LiteralPath $OutDir) {
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 
 $SrcDir = Join-Path $Root "fpga\src"
-$SimTop = Join-Path $Root "fpga\sim\tb_mnist_top_acc.sv"
+$SimTopSrc = Join-Path $Root "fpga\sim\tb_mnist_top_acc.sv"
+$SimTop = Join-Path $OutDir "tb_mnist_top_acc_cfg.sv"
+$DataDirForSv = $DataDir.Replace("\", "/")
+$tbText = Get-Content -LiteralPath $SimTopSrc -Raw
+$tbText = $tbText -replace 'parameter N_IMAGES = \d+;', "parameter N_IMAGES = $NImages;"
+$tbText = $tbText -replace 'data_dir = "D:/IC_Workspace/mnist/fpga/data";', "data_dir = `"$DataDirForSv`";"
+Set-Content -LiteralPath $SimTop -Value $tbText -Encoding ASCII
 $sources = @(
     "weight_rom.sv",
     "line_buffer.sv",

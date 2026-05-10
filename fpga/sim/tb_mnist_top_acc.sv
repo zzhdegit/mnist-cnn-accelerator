@@ -3,6 +3,7 @@
 module tb_mnist_top_acc;
     parameter DATA_WIDTH = 16;
     parameter N_IMAGES = 30;
+    parameter MAX_IMAGES = 1000;
     parameter MAX_WAIT_CYCLES = 2000000;
 
     reg clk;
@@ -73,7 +74,8 @@ module tb_mnist_top_acc;
     integer cycle_count;
     reg signed [DATA_WIDTH-1:0] img_mem [0:28*28-1];
     reg signed [DATA_WIDTH-1:0] golden_scores [0:9];
-    reg [3:0] labels [0:N_IMAGES-1];
+    integer n_images;
+    reg [3:0] labels [0:MAX_IMAGES-1];
     string img_path;
     string golden_path;
     string label_path;
@@ -84,7 +86,17 @@ module tb_mnist_top_acc;
         if ($value$plusargs("DATA_DIR=%s", data_dir)) begin
             data_dir = data_dir;
         end
-        label_path = {data_dir, "/labels_30.hex"};
+        n_images = N_IMAGES;
+        if ($value$plusargs("N_IMAGES=%d", n_images)) begin
+            n_images = n_images;
+        end
+        if (n_images > MAX_IMAGES) begin
+            $display("ACCURACY_CONFIG_ERROR n_images=%0d exceeds MAX_IMAGES=%0d", n_images, MAX_IMAGES);
+            $finish;
+        end
+        if (!$value$plusargs("LABEL_FILE=%s", label_path)) begin
+            $sformat(label_path, "%s/labels_%0d.hex", data_dir, n_images);
+        end
         $readmemh(label_path, labels);
 
         hw_correct = 0;
@@ -98,7 +110,7 @@ module tb_mnist_top_acc;
 
         repeat (10) @(posedge clk);
 
-        for (img_idx = 0; img_idx < N_IMAGES; img_idx = img_idx + 1) begin
+        for (img_idx = 0; img_idx < n_images; img_idx = img_idx + 1) begin
             $sformat(img_path, "%s/image_%0d.hex", data_dir, img_idx);
             $sformat(golden_path, "%s/golden_%0d.hex", data_dir, img_idx);
             $readmemh(img_path, img_mem);
@@ -155,14 +167,14 @@ module tb_mnist_top_acc;
         end
 
         $display("ACCURACY_SUMMARY images=%0d hw_correct=%0d hw_acc_pct=%0d golden_correct=%0d golden_acc_pct=%0d golden_match=%0d match_pct=%0d avg_cycles=%0d",
-                 N_IMAGES,
+                 n_images,
                  hw_correct,
-                 (hw_correct * 100) / N_IMAGES,
+                 (hw_correct * 100) / n_images,
                  golden_correct,
-                 (golden_correct * 100) / N_IMAGES,
+                 (golden_correct * 100) / n_images,
                  golden_match,
-                 (golden_match * 100) / N_IMAGES,
-                 total_cycles / N_IMAGES);
+                 (golden_match * 100) / n_images,
+                 total_cycles / n_images);
         $finish;
     end
 

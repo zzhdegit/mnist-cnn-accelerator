@@ -1,6 +1,10 @@
 `timescale 1ns / 1ps
 
-// Zynq-7020 Conv2 (v8.4 - Synchronous 32-MAC Pipelined)
+// Zynq-7020 Conv2 (v10.0 - practical row-stationary tile dataflow)
+// The layer keeps a 3-row x 4-column activation tile stationary while two
+// adjacent output columns are accumulated. The output serializer is decoupled
+// from the compute FSM so the next tile can compute while the previous tile is
+// streamed to the backend.
 module conv2_layer_v5 #(
     parameter DATA_WIDTH = 16,
     parameter IN_CHANNELS = 32,
@@ -12,15 +16,15 @@ module conv2_layer_v5 #(
     input wire valid_in,
     output wire ready_out,
     input wire signed [DATA_WIDTH-1:0] pixel_in,
-    
+
     output reg valid_out,
     input wire ready_in,
     output reg signed [DATA_WIDTH-1:0] pixel_out
 );
 
     reg signed [DATA_WIDTH-1:0] b_mem_all [0:63];
-    
-    // One initialized ROM per parallel output channel.  Each bank stores two
+
+    // One initialized ROM per parallel output channel. Each bank stores two
     // output-channel groups: group 0 => oc 0..31, group 1 => oc 32..63.
     (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_0 [0:575];
     (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_1 [0:575];
@@ -91,6 +95,14 @@ module conv2_layer_v5 #(
         $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank31.hex", w_rom_31);
     end
 
+    function automatic signed [DATA_WIDTH-1:0] sat_relu(input signed [39:0] value);
+        begin
+            if ((value >>> 8) > 32767) sat_relu = 16'sh7fff;
+            else if ((value >>> 8) < 0) sat_relu = 16'sh0000;
+            else sat_relu = value[23:8];
+        end
+    endfunction
+
     wire lb_ready_internal;
     assign ready_out = lb_ready_internal;
 
@@ -99,7 +111,7 @@ module conv2_layer_v5 #(
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             ic_fill_cnt <= 0;
-            for(integer i=0; i<32; i++) lb_in_array[i] <= 0;
+            for (integer i = 0; i < 32; i = i + 1) lb_in_array[i] <= 0;
         end else if (valid_in && ready_out) begin
             lb_in_array[ic_fill_cnt[4:0]] <= pixel_in;
             if (ic_fill_cnt == 31) ic_fill_cnt <= 0;
@@ -110,52 +122,135 @@ module conv2_layer_v5 #(
     wire [511:0] lb_pixel_in;
     genvar pack_i;
     generate
-        for (pack_i=0; pack_i<32; pack_i=pack_i+1) assign lb_pixel_in[pack_i*16 +: 16] = lb_in_array[pack_i];
+        for (pack_i = 0; pack_i < 32; pack_i = pack_i + 1) begin : pack_input
+            assign lb_pixel_in[pack_i*16 +: 16] = lb_in_array[pack_i];
+        end
     endgenerate
 
     wire lb_valid_in_pulse = (valid_in && ready_out && ic_fill_cnt == 31);
     wire signed [511:0] lb_out [0:8];
     wire lb_valid;
 
-    typedef enum {IDLE, COMPUTE, WAIT_PIPE, SERIAL_OUT} state_t;
+    typedef enum logic [1:0] {IDLE, WAIT_SECOND, COMPUTE, WAIT_PIPE} state_t;
     state_t state;
-    
-    reg batch_idx; reg [5:0] ic_idx; reg [3:0] k_idx; reg [5:0] serial_oc;
-    wire lb_ready = (state == SERIAL_OUT && serial_oc == 63 && valid_out && ready_in);
+
+    wire lb_ready = lb_valid && (state == IDLE || state == WAIT_SECOND);
 
     line_buffer #(512, 26) lb_inst (
-        .clk(clk), .rst_n(rst_n), .valid_in(lb_valid_in_pulse), .ready_out(lb_ready_internal),
-        .pixel_in(lb_pixel_in), .valid_out(lb_valid), .ready_in(lb_ready),
+        .clk(clk),
+        .rst_n(rst_n),
+        .valid_in(lb_valid_in_pulse),
+        .ready_out(lb_ready_internal),
+        .pixel_in(lb_pixel_in),
+        .valid_out(lb_valid),
+        .ready_in(lb_ready),
         .pixel_out(lb_out)
     );
 
-    reg signed [39:0] acc [0:31];
-    reg signed [DATA_WIDTH-1:0] results [0:63];
-    reg signed [15:0] w_read [0:31];
-    reg signed [15:0] px_read;
+    // RS activation tile: three input rows and four adjacent columns.
+    // Output column 0 consumes tile_col[0..2], output column 1 consumes [1..3].
+    reg signed [511:0] tile_r0 [0:3];
+    reg signed [511:0] tile_r1 [0:3];
+    reg signed [511:0] tile_r2 [0:3];
+
+    reg batch_idx;
+    reg [5:0] ic_idx;
+    reg [3:0] k_idx;
+    reg [5:0] serial_oc;
+    reg serial_col;
+    reg out_active;
+    reg [4:0] win_col_idx;
+
+    reg signed [39:0] acc0 [0:31];
+    reg signed [39:0] acc1 [0:31];
+    reg signed [DATA_WIDTH-1:0] results0 [0:63];
+    reg signed [DATA_WIDTH-1:0] results1 [0:63];
+    reg signed [DATA_WIDTH-1:0] w_read [0:31];
+    reg signed [DATA_WIDTH-1:0] px0_read;
+    reg signed [DATA_WIDTH-1:0] px1_read;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            state <= IDLE; batch_idx <= 0; ic_idx <= 0; k_idx <= 0;
-            valid_out <= 0; pixel_out <= 0; serial_oc <= 0;
-            for(integer i=0; i<64; i++) results[i] <= 0;
-            for(integer m=0; m<32; m++) acc[m] <= 0;
-            for(integer m=0; m<32; m++) w_read[m] <= 0;
-            px_read <= 0;
+            state <= IDLE;
+            batch_idx <= 0;
+            ic_idx <= 0;
+            k_idx <= 0;
+            serial_oc <= 0;
+            serial_col <= 0;
+            win_col_idx <= 0;
+            valid_out <= 0;
+            pixel_out <= 0;
+            px0_read <= 0;
+            px1_read <= 0;
+            out_active <= 0;
+            for (integer i = 0; i < 4; i = i + 1) begin
+                tile_r0[i] <= 0;
+                tile_r1[i] <= 0;
+                tile_r2[i] <= 0;
+            end
+            for (integer i = 0; i < 64; i = i + 1) begin
+                results0[i] <= 0;
+                results1[i] <= 0;
+            end
+            for (integer m = 0; m < 32; m = m + 1) begin
+                acc0[m] <= 0;
+                acc1[m] <= 0;
+                w_read[m] <= 0;
+            end
         end else begin
+            if (out_active && valid_out && ready_in) begin
+                if (!serial_col && serial_oc == 63) begin
+                    serial_col <= 1;
+                    serial_oc <= 0;
+                    pixel_out <= results1[0];
+                end else if (serial_col && serial_oc == 63) begin
+                    valid_out <= 0;
+                    out_active <= 0;
+                end else begin
+                    serial_oc <= serial_oc + 1;
+                    if (serial_col) pixel_out <= results1[serial_oc + 1];
+                    else pixel_out <= results0[serial_oc + 1];
+                end
+            end
+
             case (state)
                 IDLE: begin
-                    valid_out <= 0;
                     if (lb_valid) begin
+                        tile_r0[0] <= lb_out[0];
+                        tile_r0[1] <= lb_out[1];
+                        tile_r0[2] <= lb_out[2];
+                        tile_r1[0] <= lb_out[3];
+                        tile_r1[1] <= lb_out[4];
+                        tile_r1[2] <= lb_out[5];
+                        tile_r2[0] <= lb_out[6];
+                        tile_r2[1] <= lb_out[7];
+                        tile_r2[2] <= lb_out[8];
+                        win_col_idx <= win_col_idx + 1;
+                        state <= WAIT_SECOND;
+                    end
+                end
+
+                WAIT_SECOND: begin
+                    if (lb_valid) begin
+                        tile_r0[3] <= lb_out[2];
+                        tile_r1[3] <= lb_out[5];
+                        tile_r2[3] <= lb_out[8];
+                        win_col_idx <= (win_col_idx == 23) ? 0 : win_col_idx + 1;
+                        batch_idx <= 0;
+                        ic_idx <= 0;
+                        k_idx <= 0;
+                        px0_read <= 0;
+                        px1_read <= 0;
+                        for (integer m = 0; m < 32; m = m + 1) begin
+                            acc0[m] <= (b_mem_all[m] <<< 8);
+                            acc1[m] <= (b_mem_all[m] <<< 8);
+                            w_read[m] <= 0;
+                        end
                         state <= COMPUTE;
-                        batch_idx <= 0; ic_idx <= 0; k_idx <= 0;
-                        for(integer m=0; m<32; m++) acc[m] <= (b_mem_all[m] <<< 8);
                     end
                 end
 
                 COMPUTE: begin
-                    // Pipeline Stage 1: Read weights & pixels
-                    // (Index logic simplified for BRAM inference)
                     w_read[0] <= w_rom_0[batch_idx*288 + ic_idx*9 + k_idx];
                     w_read[1] <= w_rom_1[batch_idx*288 + ic_idx*9 + k_idx];
                     w_read[2] <= w_rom_2[batch_idx*288 + ic_idx*9 + k_idx];
@@ -188,53 +283,96 @@ module conv2_layer_v5 #(
                     w_read[29] <= w_rom_29[batch_idx*288 + ic_idx*9 + k_idx];
                     w_read[30] <= w_rom_30[batch_idx*288 + ic_idx*9 + k_idx];
                     w_read[31] <= w_rom_31[batch_idx*288 + ic_idx*9 + k_idx];
-                    px_read <= lb_out[k_idx][ic_idx*16 +: 16];
+                    case (k_idx)
+                        4'd0: begin
+                            px0_read <= tile_r0[0][ic_idx*16 +: 16];
+                            px1_read <= tile_r0[1][ic_idx*16 +: 16];
+                        end
+                        4'd1: begin
+                            px0_read <= tile_r0[1][ic_idx*16 +: 16];
+                            px1_read <= tile_r0[2][ic_idx*16 +: 16];
+                        end
+                        4'd2: begin
+                            px0_read <= tile_r0[2][ic_idx*16 +: 16];
+                            px1_read <= tile_r0[3][ic_idx*16 +: 16];
+                        end
+                        4'd3: begin
+                            px0_read <= tile_r1[0][ic_idx*16 +: 16];
+                            px1_read <= tile_r1[1][ic_idx*16 +: 16];
+                        end
+                        4'd4: begin
+                            px0_read <= tile_r1[1][ic_idx*16 +: 16];
+                            px1_read <= tile_r1[2][ic_idx*16 +: 16];
+                        end
+                        4'd5: begin
+                            px0_read <= tile_r1[2][ic_idx*16 +: 16];
+                            px1_read <= tile_r1[3][ic_idx*16 +: 16];
+                        end
+                        4'd6: begin
+                            px0_read <= tile_r2[0][ic_idx*16 +: 16];
+                            px1_read <= tile_r2[1][ic_idx*16 +: 16];
+                        end
+                        4'd7: begin
+                            px0_read <= tile_r2[1][ic_idx*16 +: 16];
+                            px1_read <= tile_r2[2][ic_idx*16 +: 16];
+                        end
+                        default: begin
+                            px0_read <= tile_r2[2][ic_idx*16 +: 16];
+                            px1_read <= tile_r2[3][ic_idx*16 +: 16];
+                        end
+                    endcase
 
-                    // Pipeline Stage 2: Multiply & Accumulate (Delayed by 1 cycle)
-                    for (integer m=0; m<32; m=m+1) begin
-                        acc[m] <= acc[m] + ($signed(px_read) * $signed(w_read[m]));
+                    for (integer m = 0; m < 32; m = m + 1) begin
+                        acc0[m] <= acc0[m] + ($signed(px0_read) * $signed(w_read[m]));
+                        acc1[m] <= acc1[m] + ($signed(px1_read) * $signed(w_read[m]));
                     end
 
-                    // Loop logic
                     if (k_idx == 8) begin
                         k_idx <= 0;
                         if (ic_idx == 31) begin
                             ic_idx <= 0;
-                            state <= WAIT_PIPE; // Extra cycle to catch last MAC
-                        end else ic_idx <= ic_idx + 1;
-                    end else k_idx <= k_idx + 1;
+                            state <= WAIT_PIPE;
+                        end else begin
+                            ic_idx <= ic_idx + 1;
+                        end
+                    end else begin
+                        k_idx <= k_idx + 1;
+                    end
                 end
 
                 WAIT_PIPE: begin
-                    // Final Accumulation cycle for the last product
-                    for (integer m=0; m<32; m=m+1) begin
-                        automatic logic signed [39:0] res = acc[m] + ($signed(px_read) * $signed(w_read[m]));
-                        results[batch_idx*32 + m] <= (res >>> 8 > 32767) ? 16'h7FFF : (res >>> 8 < 0) ? 16'd0 : res[23:8];
-                    end
-                    
-                    if (batch_idx == 1) begin
-                        state <= SERIAL_OUT;
-                        serial_oc <= 0; valid_out <= 1;
-                        // Pre-calculate results[0] immediately for simulation
-                        begin
-                            automatic logic signed [39:0] first_res = acc[0] + ($signed(px_read) * $signed(w_read[0]));
-                            pixel_out <= (first_res >>> 8 > 32767) ? 16'h7FFF : (first_res >>> 8 < 0) ? 16'd0 : first_res[23:8];
+                    if (!out_active) begin
+                        for (integer m = 0; m < 32; m = m + 1) begin
+                            automatic logic signed [39:0] res0;
+                            automatic logic signed [39:0] res1;
+                            res0 = acc0[m] + ($signed(px0_read) * $signed(w_read[m]));
+                            res1 = acc1[m] + ($signed(px1_read) * $signed(w_read[m]));
+                            results0[batch_idx*32 + m] <= sat_relu(res0);
+                            results1[batch_idx*32 + m] <= sat_relu(res1);
+                        end
+
+                        if (batch_idx == 1) begin
+                            serial_col <= 0;
+                            serial_oc <= 0;
+                            out_active <= 1;
+                            valid_out <= 1;
+                            pixel_out <= results0[0];
+                            state <= IDLE;
+                        end else begin
+                            batch_idx <= 1;
+                            ic_idx <= 0;
+                            k_idx <= 0;
+                            px0_read <= 0;
+                            px1_read <= 0;
+                            for (integer m = 0; m < 32; m = m + 1) begin
+                                acc0[m] <= (b_mem_all[32 + m] <<< 8);
+                                acc1[m] <= (b_mem_all[32 + m] <<< 8);
+                                w_read[m] <= 0;
+                            end
+                            state <= COMPUTE;
                         end
                     end else begin
-                        batch_idx <= batch_idx + 1;
-                        for(integer m=0; m<32; m++) acc[m] <= (b_mem_all[32 + m] <<< 8);
-                        state <= COMPUTE;
-                    end
-                end
-
-                SERIAL_OUT: begin
-                    if (valid_out && ready_in) begin
-                        if (serial_oc == 63) begin
-                            valid_out <= 0; state <= IDLE;
-                        end else begin
-                            serial_oc <= serial_oc + 1;
-                            pixel_out <= results[serial_oc + 1];
-                        end
+                        state <= WAIT_PIPE;
                     end
                 end
             endcase
