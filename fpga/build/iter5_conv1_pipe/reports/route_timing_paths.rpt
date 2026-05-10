@@ -1,0 +1,1457 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2024.2 (win64) Build 5239630 Fri Nov 08 22:35:27 MST 2024
+| Date         : Sun May 10 18:35:03 2026
+| Host         : DESKTOP-T66FGJ1 running 64-bit major release  (build 9200)
+| Command      : report_timing -max_paths 20 -file D:/IC_Workspace/mnist/fpga/build/iter5_conv1_pipe/reports/route_timing_paths.rpt
+| Design       : top_mnist
+| Device       : 7z020-clg400
+| Speed File   : -1  PRODUCTION 1.12 2019-11-22
+| Design State : Routed
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Timing Report
+
+Slack (MET) :             0.419ns  (required time - arrival time)
+  Source:                 backend_inst/fc1_inst/px_d2_reg[15]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Destination:            backend_inst/fc1_inst/out_pixels_reg[100][4]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            12.500ns  (clk rise@12.500ns - clk rise@0.000ns)
+  Data Path Delay:        11.826ns  (logic 5.950ns (50.314%)  route 5.876ns (49.686%))
+  Logic Levels:           7  (CARRY4=4 DSP48E1=1 LUT2=1 LUT3=1)
+  Clock Path Skew:        0.040ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    4.843ns = ( 17.343 - 12.500 ) 
+    Source Clock Delay      (SCD):    5.178ns
+    Clock Pessimism Removal (CPR):    0.375ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+    U7                                                0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+    U7                   IBUF (Prop_ibuf_I_O)         1.058     1.058 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           2.171     3.229    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.101     3.330 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.848     5.178    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X37Y102        FDCE                                         r  backend_inst/fc1_inst/px_d2_reg[15]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X37Y102        FDCE (Prop_fdce_C_Q)         0.419     5.597 r  backend_inst/fc1_inst/px_d2_reg[15]/Q
+                         net (fo=15, routed)          0.843     6.440    backend_inst/fc1_inst/px_d2_reg_n_0_[15]
+    DSP48_X2Y41          DSP48E1 (Prop_dsp48e1_A[23]_P[22])
+                                                      4.013    10.453 r  backend_inst/fc1_inst/value/P[22]
+                         net (fo=3, routed)           1.201    11.655    backend_inst/fc1_inst/value_n_83
+    SLICE_X38Y103        LUT2 (Prop_lut2_I0_O)        0.124    11.779 r  backend_inst/fc1_inst/out_pixels[0][15]_i_29/O
+                         net (fo=1, routed)           0.000    11.779    backend_inst/fc1_inst/out_pixels[0][15]_i_29_n_0
+    SLICE_X38Y103        CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.513    12.292 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14/CO[3]
+                         net (fo=1, routed)           0.000    12.292    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14_n_0
+    SLICE_X38Y104        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.409 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8/CO[3]
+                         net (fo=1, routed)           0.000    12.409    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8_n_0
+    SLICE_X38Y105        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.526 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6/CO[3]
+                         net (fo=1, routed)           0.000    12.526    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6_n_0
+    SLICE_X38Y106        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    12.780 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_5/CO[0]
+                         net (fo=16, routed)          1.314    14.094    backend_inst/fc1_inst/p_1_in2_in
+    SLICE_X53Y113        LUT3 (Prop_lut3_I2_O)        0.393    14.487 r  backend_inst/fc1_inst/out_pixels[0][4]_i_1/O
+                         net (fo=128, routed)         2.517    17.004    backend_inst/fc1_inst/sat_relu0_return[4]
+    SLICE_X109Y137       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[100][4]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       12.500    12.500 r  
+    U7                                                0.000    12.500 r  clk (IN)
+                         net (fo=0)                   0.000    12.500    clk
+    U7                   IBUF (Prop_ibuf_I_O)         0.924    13.424 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           1.972    15.396    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.091    15.487 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.856    17.343    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X109Y137       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[100][4]/C
+                         clock pessimism              0.375    17.718    
+                         clock uncertainty           -0.035    17.683    
+    SLICE_X109Y137       FDCE (Setup_fdce_C_D)       -0.260    17.423    backend_inst/fc1_inst/out_pixels_reg[100][4]
+  -------------------------------------------------------------------
+                         required time                         17.423    
+                         arrival time                         -17.004    
+  -------------------------------------------------------------------
+                         slack                                  0.419    
+
+Slack (MET) :             0.419ns  (required time - arrival time)
+  Source:                 backend_inst/fc1_inst/px_d2_reg[15]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Destination:            backend_inst/fc1_inst/out_pixels_reg[88][4]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            12.500ns  (clk rise@12.500ns - clk rise@0.000ns)
+  Data Path Delay:        11.816ns  (logic 5.950ns (50.357%)  route 5.866ns (49.643%))
+  Logic Levels:           7  (CARRY4=4 DSP48E1=1 LUT2=1 LUT3=1)
+  Clock Path Skew:        0.039ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    4.842ns = ( 17.342 - 12.500 ) 
+    Source Clock Delay      (SCD):    5.178ns
+    Clock Pessimism Removal (CPR):    0.375ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+    U7                                                0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+    U7                   IBUF (Prop_ibuf_I_O)         1.058     1.058 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           2.171     3.229    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.101     3.330 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.848     5.178    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X37Y102        FDCE                                         r  backend_inst/fc1_inst/px_d2_reg[15]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X37Y102        FDCE (Prop_fdce_C_Q)         0.419     5.597 r  backend_inst/fc1_inst/px_d2_reg[15]/Q
+                         net (fo=15, routed)          0.843     6.440    backend_inst/fc1_inst/px_d2_reg_n_0_[15]
+    DSP48_X2Y41          DSP48E1 (Prop_dsp48e1_A[23]_P[22])
+                                                      4.013    10.453 r  backend_inst/fc1_inst/value/P[22]
+                         net (fo=3, routed)           1.201    11.655    backend_inst/fc1_inst/value_n_83
+    SLICE_X38Y103        LUT2 (Prop_lut2_I0_O)        0.124    11.779 r  backend_inst/fc1_inst/out_pixels[0][15]_i_29/O
+                         net (fo=1, routed)           0.000    11.779    backend_inst/fc1_inst/out_pixels[0][15]_i_29_n_0
+    SLICE_X38Y103        CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.513    12.292 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14/CO[3]
+                         net (fo=1, routed)           0.000    12.292    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14_n_0
+    SLICE_X38Y104        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.409 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8/CO[3]
+                         net (fo=1, routed)           0.000    12.409    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8_n_0
+    SLICE_X38Y105        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.526 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6/CO[3]
+                         net (fo=1, routed)           0.000    12.526    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6_n_0
+    SLICE_X38Y106        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    12.780 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_5/CO[0]
+                         net (fo=16, routed)          1.314    14.094    backend_inst/fc1_inst/p_1_in2_in
+    SLICE_X53Y113        LUT3 (Prop_lut3_I2_O)        0.393    14.487 r  backend_inst/fc1_inst/out_pixels[0][4]_i_1/O
+                         net (fo=128, routed)         2.507    16.994    backend_inst/fc1_inst/sat_relu0_return[4]
+    SLICE_X113Y132       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[88][4]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       12.500    12.500 r  
+    U7                                                0.000    12.500 r  clk (IN)
+                         net (fo=0)                   0.000    12.500    clk
+    U7                   IBUF (Prop_ibuf_I_O)         0.924    13.424 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           1.972    15.396    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.091    15.487 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.855    17.342    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X113Y132       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[88][4]/C
+                         clock pessimism              0.375    17.717    
+                         clock uncertainty           -0.035    17.682    
+    SLICE_X113Y132       FDCE (Setup_fdce_C_D)       -0.269    17.413    backend_inst/fc1_inst/out_pixels_reg[88][4]
+  -------------------------------------------------------------------
+                         required time                         17.413    
+                         arrival time                         -16.994    
+  -------------------------------------------------------------------
+                         slack                                  0.419    
+
+Slack (MET) :             0.426ns  (required time - arrival time)
+  Source:                 backend_inst/fc1_inst/px_d2_reg[15]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Destination:            backend_inst/fc1_inst/out_pixels_reg[104][10]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            12.500ns  (clk rise@12.500ns - clk rise@0.000ns)
+  Data Path Delay:        11.987ns  (logic 5.924ns (49.420%)  route 6.063ns (50.580%))
+  Logic Levels:           7  (CARRY4=4 DSP48E1=1 LUT2=1 LUT3=1)
+  Clock Path Skew:        0.042ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    4.845ns = ( 17.345 - 12.500 ) 
+    Source Clock Delay      (SCD):    5.178ns
+    Clock Pessimism Removal (CPR):    0.375ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+    U7                                                0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+    U7                   IBUF (Prop_ibuf_I_O)         1.058     1.058 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           2.171     3.229    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.101     3.330 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.848     5.178    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X37Y102        FDCE                                         r  backend_inst/fc1_inst/px_d2_reg[15]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X37Y102        FDCE (Prop_fdce_C_Q)         0.419     5.597 r  backend_inst/fc1_inst/px_d2_reg[15]/Q
+                         net (fo=15, routed)          0.843     6.440    backend_inst/fc1_inst/px_d2_reg_n_0_[15]
+    DSP48_X2Y41          DSP48E1 (Prop_dsp48e1_A[23]_P[22])
+                                                      4.013    10.453 r  backend_inst/fc1_inst/value/P[22]
+                         net (fo=3, routed)           1.201    11.655    backend_inst/fc1_inst/value_n_83
+    SLICE_X38Y103        LUT2 (Prop_lut2_I0_O)        0.124    11.779 r  backend_inst/fc1_inst/out_pixels[0][15]_i_29/O
+                         net (fo=1, routed)           0.000    11.779    backend_inst/fc1_inst/out_pixels[0][15]_i_29_n_0
+    SLICE_X38Y103        CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.513    12.292 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14/CO[3]
+                         net (fo=1, routed)           0.000    12.292    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14_n_0
+    SLICE_X38Y104        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.409 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8/CO[3]
+                         net (fo=1, routed)           0.000    12.409    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8_n_0
+    SLICE_X38Y105        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.526 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6/CO[3]
+                         net (fo=1, routed)           0.000    12.526    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6_n_0
+    SLICE_X38Y106        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    12.780 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_5/CO[0]
+                         net (fo=16, routed)          1.149    13.929    backend_inst/fc1_inst/p_1_in2_in
+    SLICE_X53Y112        LUT3 (Prop_lut3_I2_O)        0.367    14.296 r  backend_inst/fc1_inst/out_pixels[0][10]_i_1/O
+                         net (fo=128, routed)         2.870    17.166    backend_inst/fc1_inst/sat_relu0_return[10]
+    SLICE_X109Y139       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[104][10]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       12.500    12.500 r  
+    U7                                                0.000    12.500 r  clk (IN)
+                         net (fo=0)                   0.000    12.500    clk
+    U7                   IBUF (Prop_ibuf_I_O)         0.924    13.424 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           1.972    15.396    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.091    15.487 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.858    17.345    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X109Y139       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[104][10]/C
+                         clock pessimism              0.375    17.720    
+                         clock uncertainty           -0.035    17.685    
+    SLICE_X109Y139       FDCE (Setup_fdce_C_D)       -0.093    17.592    backend_inst/fc1_inst/out_pixels_reg[104][10]
+  -------------------------------------------------------------------
+                         required time                         17.592    
+                         arrival time                         -17.166    
+  -------------------------------------------------------------------
+                         slack                                  0.426    
+
+Slack (MET) :             0.439ns  (required time - arrival time)
+  Source:                 backend_inst/fc1_inst/px_d2_reg[15]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Destination:            backend_inst/fc1_inst/out_pixels_reg[101][4]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            12.500ns  (clk rise@12.500ns - clk rise@0.000ns)
+  Data Path Delay:        11.774ns  (logic 5.950ns (50.534%)  route 5.824ns (49.466%))
+  Logic Levels:           7  (CARRY4=4 DSP48E1=1 LUT2=1 LUT3=1)
+  Clock Path Skew:        0.044ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    4.847ns = ( 17.347 - 12.500 ) 
+    Source Clock Delay      (SCD):    5.178ns
+    Clock Pessimism Removal (CPR):    0.375ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+    U7                                                0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+    U7                   IBUF (Prop_ibuf_I_O)         1.058     1.058 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           2.171     3.229    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.101     3.330 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.848     5.178    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X37Y102        FDCE                                         r  backend_inst/fc1_inst/px_d2_reg[15]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X37Y102        FDCE (Prop_fdce_C_Q)         0.419     5.597 r  backend_inst/fc1_inst/px_d2_reg[15]/Q
+                         net (fo=15, routed)          0.843     6.440    backend_inst/fc1_inst/px_d2_reg_n_0_[15]
+    DSP48_X2Y41          DSP48E1 (Prop_dsp48e1_A[23]_P[22])
+                                                      4.013    10.453 r  backend_inst/fc1_inst/value/P[22]
+                         net (fo=3, routed)           1.201    11.655    backend_inst/fc1_inst/value_n_83
+    SLICE_X38Y103        LUT2 (Prop_lut2_I0_O)        0.124    11.779 r  backend_inst/fc1_inst/out_pixels[0][15]_i_29/O
+                         net (fo=1, routed)           0.000    11.779    backend_inst/fc1_inst/out_pixels[0][15]_i_29_n_0
+    SLICE_X38Y103        CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.513    12.292 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14/CO[3]
+                         net (fo=1, routed)           0.000    12.292    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14_n_0
+    SLICE_X38Y104        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.409 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8/CO[3]
+                         net (fo=1, routed)           0.000    12.409    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8_n_0
+    SLICE_X38Y105        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.526 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6/CO[3]
+                         net (fo=1, routed)           0.000    12.526    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6_n_0
+    SLICE_X38Y106        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    12.780 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_5/CO[0]
+                         net (fo=16, routed)          1.314    14.094    backend_inst/fc1_inst/p_1_in2_in
+    SLICE_X53Y113        LUT3 (Prop_lut3_I2_O)        0.393    14.487 r  backend_inst/fc1_inst/out_pixels[0][4]_i_1/O
+                         net (fo=128, routed)         2.466    16.953    backend_inst/fc1_inst/sat_relu0_return[4]
+    SLICE_X110Y138       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[101][4]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       12.500    12.500 r  
+    U7                                                0.000    12.500 r  clk (IN)
+                         net (fo=0)                   0.000    12.500    clk
+    U7                   IBUF (Prop_ibuf_I_O)         0.924    13.424 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           1.972    15.396    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.091    15.487 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.860    17.347    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X110Y138       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[101][4]/C
+                         clock pessimism              0.375    17.722    
+                         clock uncertainty           -0.035    17.687    
+    SLICE_X110Y138       FDCE (Setup_fdce_C_D)       -0.295    17.392    backend_inst/fc1_inst/out_pixels_reg[101][4]
+  -------------------------------------------------------------------
+                         required time                         17.392    
+                         arrival time                         -16.953    
+  -------------------------------------------------------------------
+                         slack                                  0.439    
+
+Slack (MET) :             0.440ns  (required time - arrival time)
+  Source:                 backend_inst/fc1_inst/px_d2_reg[15]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Destination:            backend_inst/fc1_inst/out_pixels_reg[102][10]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            12.500ns  (clk rise@12.500ns - clk rise@0.000ns)
+  Data Path Delay:        12.018ns  (logic 5.924ns (49.292%)  route 6.094ns (50.708%))
+  Logic Levels:           7  (CARRY4=4 DSP48E1=1 LUT2=1 LUT3=1)
+  Clock Path Skew:        0.041ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    4.844ns = ( 17.344 - 12.500 ) 
+    Source Clock Delay      (SCD):    5.178ns
+    Clock Pessimism Removal (CPR):    0.375ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+    U7                                                0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+    U7                   IBUF (Prop_ibuf_I_O)         1.058     1.058 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           2.171     3.229    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.101     3.330 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.848     5.178    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X37Y102        FDCE                                         r  backend_inst/fc1_inst/px_d2_reg[15]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X37Y102        FDCE (Prop_fdce_C_Q)         0.419     5.597 r  backend_inst/fc1_inst/px_d2_reg[15]/Q
+                         net (fo=15, routed)          0.843     6.440    backend_inst/fc1_inst/px_d2_reg_n_0_[15]
+    DSP48_X2Y41          DSP48E1 (Prop_dsp48e1_A[23]_P[22])
+                                                      4.013    10.453 r  backend_inst/fc1_inst/value/P[22]
+                         net (fo=3, routed)           1.201    11.655    backend_inst/fc1_inst/value_n_83
+    SLICE_X38Y103        LUT2 (Prop_lut2_I0_O)        0.124    11.779 r  backend_inst/fc1_inst/out_pixels[0][15]_i_29/O
+                         net (fo=1, routed)           0.000    11.779    backend_inst/fc1_inst/out_pixels[0][15]_i_29_n_0
+    SLICE_X38Y103        CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.513    12.292 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14/CO[3]
+                         net (fo=1, routed)           0.000    12.292    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14_n_0
+    SLICE_X38Y104        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.409 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8/CO[3]
+                         net (fo=1, routed)           0.000    12.409    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8_n_0
+    SLICE_X38Y105        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.526 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6/CO[3]
+                         net (fo=1, routed)           0.000    12.526    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6_n_0
+    SLICE_X38Y106        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    12.780 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_5/CO[0]
+                         net (fo=16, routed)          1.149    13.929    backend_inst/fc1_inst/p_1_in2_in
+    SLICE_X53Y112        LUT3 (Prop_lut3_I2_O)        0.367    14.296 r  backend_inst/fc1_inst/out_pixels[0][10]_i_1/O
+                         net (fo=128, routed)         2.901    17.197    backend_inst/fc1_inst/sat_relu0_return[10]
+    SLICE_X108Y138       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[102][10]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       12.500    12.500 r  
+    U7                                                0.000    12.500 r  clk (IN)
+                         net (fo=0)                   0.000    12.500    clk
+    U7                   IBUF (Prop_ibuf_I_O)         0.924    13.424 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           1.972    15.396    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.091    15.487 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.857    17.344    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X108Y138       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[102][10]/C
+                         clock pessimism              0.375    17.719    
+                         clock uncertainty           -0.035    17.684    
+    SLICE_X108Y138       FDCE (Setup_fdce_C_D)       -0.047    17.637    backend_inst/fc1_inst/out_pixels_reg[102][10]
+  -------------------------------------------------------------------
+                         required time                         17.637    
+                         arrival time                         -17.197    
+  -------------------------------------------------------------------
+                         slack                                  0.440    
+
+Slack (MET) :             0.457ns  (required time - arrival time)
+  Source:                 backend_inst/fc1_inst/px_d2_reg[15]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Destination:            backend_inst/fc1_inst/out_pixels_reg[82][4]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            12.500ns  (clk rise@12.500ns - clk rise@0.000ns)
+  Data Path Delay:        11.753ns  (logic 5.950ns (50.623%)  route 5.803ns (49.377%))
+  Logic Levels:           7  (CARRY4=4 DSP48E1=1 LUT2=1 LUT3=1)
+  Clock Path Skew:        0.040ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    4.843ns = ( 17.343 - 12.500 ) 
+    Source Clock Delay      (SCD):    5.178ns
+    Clock Pessimism Removal (CPR):    0.375ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+    U7                                                0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+    U7                   IBUF (Prop_ibuf_I_O)         1.058     1.058 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           2.171     3.229    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.101     3.330 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.848     5.178    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X37Y102        FDCE                                         r  backend_inst/fc1_inst/px_d2_reg[15]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X37Y102        FDCE (Prop_fdce_C_Q)         0.419     5.597 r  backend_inst/fc1_inst/px_d2_reg[15]/Q
+                         net (fo=15, routed)          0.843     6.440    backend_inst/fc1_inst/px_d2_reg_n_0_[15]
+    DSP48_X2Y41          DSP48E1 (Prop_dsp48e1_A[23]_P[22])
+                                                      4.013    10.453 r  backend_inst/fc1_inst/value/P[22]
+                         net (fo=3, routed)           1.201    11.655    backend_inst/fc1_inst/value_n_83
+    SLICE_X38Y103        LUT2 (Prop_lut2_I0_O)        0.124    11.779 r  backend_inst/fc1_inst/out_pixels[0][15]_i_29/O
+                         net (fo=1, routed)           0.000    11.779    backend_inst/fc1_inst/out_pixels[0][15]_i_29_n_0
+    SLICE_X38Y103        CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.513    12.292 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14/CO[3]
+                         net (fo=1, routed)           0.000    12.292    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14_n_0
+    SLICE_X38Y104        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.409 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8/CO[3]
+                         net (fo=1, routed)           0.000    12.409    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8_n_0
+    SLICE_X38Y105        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.526 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6/CO[3]
+                         net (fo=1, routed)           0.000    12.526    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6_n_0
+    SLICE_X38Y106        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    12.780 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_5/CO[0]
+                         net (fo=16, routed)          1.314    14.094    backend_inst/fc1_inst/p_1_in2_in
+    SLICE_X53Y113        LUT3 (Prop_lut3_I2_O)        0.393    14.487 r  backend_inst/fc1_inst/out_pixels[0][4]_i_1/O
+                         net (fo=128, routed)         2.445    16.932    backend_inst/fc1_inst/sat_relu0_return[4]
+    SLICE_X111Y133       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[82][4]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       12.500    12.500 r  
+    U7                                                0.000    12.500 r  clk (IN)
+                         net (fo=0)                   0.000    12.500    clk
+    U7                   IBUF (Prop_ibuf_I_O)         0.924    13.424 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           1.972    15.396    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.091    15.487 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.856    17.343    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X111Y133       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[82][4]/C
+                         clock pessimism              0.375    17.718    
+                         clock uncertainty           -0.035    17.683    
+    SLICE_X111Y133       FDCE (Setup_fdce_C_D)       -0.294    17.389    backend_inst/fc1_inst/out_pixels_reg[82][4]
+  -------------------------------------------------------------------
+                         required time                         17.389    
+                         arrival time                         -16.932    
+  -------------------------------------------------------------------
+                         slack                                  0.457    
+
+Slack (MET) :             0.477ns  (required time - arrival time)
+  Source:                 backend_inst/fc1_inst/px_d2_reg[15]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Destination:            backend_inst/fc1_inst/out_pixels_reg[111][4]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            12.500ns  (clk rise@12.500ns - clk rise@0.000ns)
+  Data Path Delay:        11.743ns  (logic 5.950ns (50.666%)  route 5.793ns (49.334%))
+  Logic Levels:           7  (CARRY4=4 DSP48E1=1 LUT2=1 LUT3=1)
+  Clock Path Skew:        0.039ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    4.842ns = ( 17.342 - 12.500 ) 
+    Source Clock Delay      (SCD):    5.178ns
+    Clock Pessimism Removal (CPR):    0.375ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+    U7                                                0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+    U7                   IBUF (Prop_ibuf_I_O)         1.058     1.058 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           2.171     3.229    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.101     3.330 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.848     5.178    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X37Y102        FDCE                                         r  backend_inst/fc1_inst/px_d2_reg[15]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X37Y102        FDCE (Prop_fdce_C_Q)         0.419     5.597 r  backend_inst/fc1_inst/px_d2_reg[15]/Q
+                         net (fo=15, routed)          0.843     6.440    backend_inst/fc1_inst/px_d2_reg_n_0_[15]
+    DSP48_X2Y41          DSP48E1 (Prop_dsp48e1_A[23]_P[22])
+                                                      4.013    10.453 r  backend_inst/fc1_inst/value/P[22]
+                         net (fo=3, routed)           1.201    11.655    backend_inst/fc1_inst/value_n_83
+    SLICE_X38Y103        LUT2 (Prop_lut2_I0_O)        0.124    11.779 r  backend_inst/fc1_inst/out_pixels[0][15]_i_29/O
+                         net (fo=1, routed)           0.000    11.779    backend_inst/fc1_inst/out_pixels[0][15]_i_29_n_0
+    SLICE_X38Y103        CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.513    12.292 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14/CO[3]
+                         net (fo=1, routed)           0.000    12.292    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14_n_0
+    SLICE_X38Y104        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.409 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8/CO[3]
+                         net (fo=1, routed)           0.000    12.409    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8_n_0
+    SLICE_X38Y105        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.526 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6/CO[3]
+                         net (fo=1, routed)           0.000    12.526    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6_n_0
+    SLICE_X38Y106        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    12.780 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_5/CO[0]
+                         net (fo=16, routed)          1.314    14.094    backend_inst/fc1_inst/p_1_in2_in
+    SLICE_X53Y113        LUT3 (Prop_lut3_I2_O)        0.393    14.487 r  backend_inst/fc1_inst/out_pixels[0][4]_i_1/O
+                         net (fo=128, routed)         2.435    16.922    backend_inst/fc1_inst/sat_relu0_return[4]
+    SLICE_X109Y135       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[111][4]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       12.500    12.500 r  
+    U7                                                0.000    12.500 r  clk (IN)
+                         net (fo=0)                   0.000    12.500    clk
+    U7                   IBUF (Prop_ibuf_I_O)         0.924    13.424 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           1.972    15.396    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.091    15.487 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.855    17.342    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X109Y135       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[111][4]/C
+                         clock pessimism              0.375    17.717    
+                         clock uncertainty           -0.035    17.682    
+    SLICE_X109Y135       FDCE (Setup_fdce_C_D)       -0.283    17.399    backend_inst/fc1_inst/out_pixels_reg[111][4]
+  -------------------------------------------------------------------
+                         required time                         17.399    
+                         arrival time                         -16.922    
+  -------------------------------------------------------------------
+                         slack                                  0.477    
+
+Slack (MET) :             0.483ns  (required time - arrival time)
+  Source:                 backend_inst/fc1_inst/px_d2_reg[15]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Destination:            backend_inst/fc1_inst/out_pixels_reg[103][4]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            12.500ns  (clk rise@12.500ns - clk rise@0.000ns)
+  Data Path Delay:        11.740ns  (logic 5.950ns (50.680%)  route 5.790ns (49.320%))
+  Logic Levels:           7  (CARRY4=4 DSP48E1=1 LUT2=1 LUT3=1)
+  Clock Path Skew:        0.042ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    4.845ns = ( 17.345 - 12.500 ) 
+    Source Clock Delay      (SCD):    5.178ns
+    Clock Pessimism Removal (CPR):    0.375ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+    U7                                                0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+    U7                   IBUF (Prop_ibuf_I_O)         1.058     1.058 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           2.171     3.229    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.101     3.330 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.848     5.178    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X37Y102        FDCE                                         r  backend_inst/fc1_inst/px_d2_reg[15]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X37Y102        FDCE (Prop_fdce_C_Q)         0.419     5.597 r  backend_inst/fc1_inst/px_d2_reg[15]/Q
+                         net (fo=15, routed)          0.843     6.440    backend_inst/fc1_inst/px_d2_reg_n_0_[15]
+    DSP48_X2Y41          DSP48E1 (Prop_dsp48e1_A[23]_P[22])
+                                                      4.013    10.453 r  backend_inst/fc1_inst/value/P[22]
+                         net (fo=3, routed)           1.201    11.655    backend_inst/fc1_inst/value_n_83
+    SLICE_X38Y103        LUT2 (Prop_lut2_I0_O)        0.124    11.779 r  backend_inst/fc1_inst/out_pixels[0][15]_i_29/O
+                         net (fo=1, routed)           0.000    11.779    backend_inst/fc1_inst/out_pixels[0][15]_i_29_n_0
+    SLICE_X38Y103        CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.513    12.292 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14/CO[3]
+                         net (fo=1, routed)           0.000    12.292    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14_n_0
+    SLICE_X38Y104        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.409 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8/CO[3]
+                         net (fo=1, routed)           0.000    12.409    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8_n_0
+    SLICE_X38Y105        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.526 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6/CO[3]
+                         net (fo=1, routed)           0.000    12.526    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6_n_0
+    SLICE_X38Y106        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    12.780 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_5/CO[0]
+                         net (fo=16, routed)          1.314    14.094    backend_inst/fc1_inst/p_1_in2_in
+    SLICE_X53Y113        LUT3 (Prop_lut3_I2_O)        0.393    14.487 r  backend_inst/fc1_inst/out_pixels[0][4]_i_1/O
+                         net (fo=128, routed)         2.432    16.919    backend_inst/fc1_inst/sat_relu0_return[4]
+    SLICE_X110Y136       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[103][4]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       12.500    12.500 r  
+    U7                                                0.000    12.500 r  clk (IN)
+                         net (fo=0)                   0.000    12.500    clk
+    U7                   IBUF (Prop_ibuf_I_O)         0.924    13.424 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           1.972    15.396    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.091    15.487 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.858    17.345    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X110Y136       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[103][4]/C
+                         clock pessimism              0.375    17.720    
+                         clock uncertainty           -0.035    17.685    
+    SLICE_X110Y136       FDCE (Setup_fdce_C_D)       -0.283    17.402    backend_inst/fc1_inst/out_pixels_reg[103][4]
+  -------------------------------------------------------------------
+                         required time                         17.402    
+                         arrival time                         -16.919    
+  -------------------------------------------------------------------
+                         slack                                  0.483    
+
+Slack (MET) :             0.485ns  (required time - arrival time)
+  Source:                 backend_inst/fc1_inst/px_d2_reg[15]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Destination:            backend_inst/fc1_inst/out_pixels_reg[109][10]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            12.500ns  (clk rise@12.500ns - clk rise@0.000ns)
+  Data Path Delay:        11.982ns  (logic 5.924ns (49.442%)  route 6.058ns (50.558%))
+  Logic Levels:           7  (CARRY4=4 DSP48E1=1 LUT2=1 LUT3=1)
+  Clock Path Skew:        0.045ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    4.848ns = ( 17.348 - 12.500 ) 
+    Source Clock Delay      (SCD):    5.178ns
+    Clock Pessimism Removal (CPR):    0.375ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+    U7                                                0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+    U7                   IBUF (Prop_ibuf_I_O)         1.058     1.058 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           2.171     3.229    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.101     3.330 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.848     5.178    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X37Y102        FDCE                                         r  backend_inst/fc1_inst/px_d2_reg[15]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X37Y102        FDCE (Prop_fdce_C_Q)         0.419     5.597 r  backend_inst/fc1_inst/px_d2_reg[15]/Q
+                         net (fo=15, routed)          0.843     6.440    backend_inst/fc1_inst/px_d2_reg_n_0_[15]
+    DSP48_X2Y41          DSP48E1 (Prop_dsp48e1_A[23]_P[22])
+                                                      4.013    10.453 r  backend_inst/fc1_inst/value/P[22]
+                         net (fo=3, routed)           1.201    11.655    backend_inst/fc1_inst/value_n_83
+    SLICE_X38Y103        LUT2 (Prop_lut2_I0_O)        0.124    11.779 r  backend_inst/fc1_inst/out_pixels[0][15]_i_29/O
+                         net (fo=1, routed)           0.000    11.779    backend_inst/fc1_inst/out_pixels[0][15]_i_29_n_0
+    SLICE_X38Y103        CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.513    12.292 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14/CO[3]
+                         net (fo=1, routed)           0.000    12.292    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14_n_0
+    SLICE_X38Y104        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.409 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8/CO[3]
+                         net (fo=1, routed)           0.000    12.409    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8_n_0
+    SLICE_X38Y105        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.526 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6/CO[3]
+                         net (fo=1, routed)           0.000    12.526    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6_n_0
+    SLICE_X38Y106        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    12.780 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_5/CO[0]
+                         net (fo=16, routed)          1.149    13.929    backend_inst/fc1_inst/p_1_in2_in
+    SLICE_X53Y112        LUT3 (Prop_lut3_I2_O)        0.367    14.296 r  backend_inst/fc1_inst/out_pixels[0][10]_i_1/O
+                         net (fo=128, routed)         2.864    17.160    backend_inst/fc1_inst/sat_relu0_return[10]
+    SLICE_X112Y139       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[109][10]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       12.500    12.500 r  
+    U7                                                0.000    12.500 r  clk (IN)
+                         net (fo=0)                   0.000    12.500    clk
+    U7                   IBUF (Prop_ibuf_I_O)         0.924    13.424 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           1.972    15.396    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.091    15.487 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.861    17.348    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X112Y139       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[109][10]/C
+                         clock pessimism              0.375    17.723    
+                         clock uncertainty           -0.035    17.688    
+    SLICE_X112Y139       FDCE (Setup_fdce_C_D)       -0.043    17.645    backend_inst/fc1_inst/out_pixels_reg[109][10]
+  -------------------------------------------------------------------
+                         required time                         17.645    
+                         arrival time                         -17.160    
+  -------------------------------------------------------------------
+                         slack                                  0.485    
+
+Slack (MET) :             0.523ns  (required time - arrival time)
+  Source:                 backend_inst/fc1_inst/px_d2_reg[15]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Destination:            backend_inst/fc1_inst/out_pixels_reg[108][4]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            12.500ns  (clk rise@12.500ns - clk rise@0.000ns)
+  Data Path Delay:        11.689ns  (logic 5.950ns (50.902%)  route 5.739ns (49.098%))
+  Logic Levels:           7  (CARRY4=4 DSP48E1=1 LUT2=1 LUT3=1)
+  Clock Path Skew:        0.043ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    4.846ns = ( 17.346 - 12.500 ) 
+    Source Clock Delay      (SCD):    5.178ns
+    Clock Pessimism Removal (CPR):    0.375ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+    U7                                                0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+    U7                   IBUF (Prop_ibuf_I_O)         1.058     1.058 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           2.171     3.229    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.101     3.330 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.848     5.178    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X37Y102        FDCE                                         r  backend_inst/fc1_inst/px_d2_reg[15]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X37Y102        FDCE (Prop_fdce_C_Q)         0.419     5.597 r  backend_inst/fc1_inst/px_d2_reg[15]/Q
+                         net (fo=15, routed)          0.843     6.440    backend_inst/fc1_inst/px_d2_reg_n_0_[15]
+    DSP48_X2Y41          DSP48E1 (Prop_dsp48e1_A[23]_P[22])
+                                                      4.013    10.453 r  backend_inst/fc1_inst/value/P[22]
+                         net (fo=3, routed)           1.201    11.655    backend_inst/fc1_inst/value_n_83
+    SLICE_X38Y103        LUT2 (Prop_lut2_I0_O)        0.124    11.779 r  backend_inst/fc1_inst/out_pixels[0][15]_i_29/O
+                         net (fo=1, routed)           0.000    11.779    backend_inst/fc1_inst/out_pixels[0][15]_i_29_n_0
+    SLICE_X38Y103        CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.513    12.292 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14/CO[3]
+                         net (fo=1, routed)           0.000    12.292    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14_n_0
+    SLICE_X38Y104        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.409 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8/CO[3]
+                         net (fo=1, routed)           0.000    12.409    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8_n_0
+    SLICE_X38Y105        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.526 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6/CO[3]
+                         net (fo=1, routed)           0.000    12.526    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6_n_0
+    SLICE_X38Y106        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    12.780 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_5/CO[0]
+                         net (fo=16, routed)          1.314    14.094    backend_inst/fc1_inst/p_1_in2_in
+    SLICE_X53Y113        LUT3 (Prop_lut3_I2_O)        0.393    14.487 r  backend_inst/fc1_inst/out_pixels[0][4]_i_1/O
+                         net (fo=128, routed)         2.381    16.868    backend_inst/fc1_inst/sat_relu0_return[4]
+    SLICE_X110Y137       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[108][4]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       12.500    12.500 r  
+    U7                                                0.000    12.500 r  clk (IN)
+                         net (fo=0)                   0.000    12.500    clk
+    U7                   IBUF (Prop_ibuf_I_O)         0.924    13.424 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           1.972    15.396    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.091    15.487 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.859    17.346    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X110Y137       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[108][4]/C
+                         clock pessimism              0.375    17.721    
+                         clock uncertainty           -0.035    17.686    
+    SLICE_X110Y137       FDCE (Setup_fdce_C_D)       -0.295    17.391    backend_inst/fc1_inst/out_pixels_reg[108][4]
+  -------------------------------------------------------------------
+                         required time                         17.391    
+                         arrival time                         -16.868    
+  -------------------------------------------------------------------
+                         slack                                  0.523    
+
+Slack (MET) :             0.525ns  (required time - arrival time)
+  Source:                 backend_inst/fc1_inst/px_d2_reg[15]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Destination:            backend_inst/fc1_inst/out_pixels_reg[109][4]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            12.500ns  (clk rise@12.500ns - clk rise@0.000ns)
+  Data Path Delay:        11.738ns  (logic 5.950ns (50.691%)  route 5.788ns (49.309%))
+  Logic Levels:           7  (CARRY4=4 DSP48E1=1 LUT2=1 LUT3=1)
+  Clock Path Skew:        0.045ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    4.848ns = ( 17.348 - 12.500 ) 
+    Source Clock Delay      (SCD):    5.178ns
+    Clock Pessimism Removal (CPR):    0.375ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+    U7                                                0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+    U7                   IBUF (Prop_ibuf_I_O)         1.058     1.058 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           2.171     3.229    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.101     3.330 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.848     5.178    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X37Y102        FDCE                                         r  backend_inst/fc1_inst/px_d2_reg[15]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X37Y102        FDCE (Prop_fdce_C_Q)         0.419     5.597 r  backend_inst/fc1_inst/px_d2_reg[15]/Q
+                         net (fo=15, routed)          0.843     6.440    backend_inst/fc1_inst/px_d2_reg_n_0_[15]
+    DSP48_X2Y41          DSP48E1 (Prop_dsp48e1_A[23]_P[22])
+                                                      4.013    10.453 r  backend_inst/fc1_inst/value/P[22]
+                         net (fo=3, routed)           1.201    11.655    backend_inst/fc1_inst/value_n_83
+    SLICE_X38Y103        LUT2 (Prop_lut2_I0_O)        0.124    11.779 r  backend_inst/fc1_inst/out_pixels[0][15]_i_29/O
+                         net (fo=1, routed)           0.000    11.779    backend_inst/fc1_inst/out_pixels[0][15]_i_29_n_0
+    SLICE_X38Y103        CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.513    12.292 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14/CO[3]
+                         net (fo=1, routed)           0.000    12.292    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14_n_0
+    SLICE_X38Y104        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.409 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8/CO[3]
+                         net (fo=1, routed)           0.000    12.409    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8_n_0
+    SLICE_X38Y105        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.526 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6/CO[3]
+                         net (fo=1, routed)           0.000    12.526    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6_n_0
+    SLICE_X38Y106        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    12.780 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_5/CO[0]
+                         net (fo=16, routed)          1.314    14.094    backend_inst/fc1_inst/p_1_in2_in
+    SLICE_X53Y113        LUT3 (Prop_lut3_I2_O)        0.393    14.487 r  backend_inst/fc1_inst/out_pixels[0][4]_i_1/O
+                         net (fo=128, routed)         2.430    16.916    backend_inst/fc1_inst/sat_relu0_return[4]
+    SLICE_X112Y139       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[109][4]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       12.500    12.500 r  
+    U7                                                0.000    12.500 r  clk (IN)
+                         net (fo=0)                   0.000    12.500    clk
+    U7                   IBUF (Prop_ibuf_I_O)         0.924    13.424 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           1.972    15.396    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.091    15.487 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.861    17.348    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X112Y139       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[109][4]/C
+                         clock pessimism              0.375    17.723    
+                         clock uncertainty           -0.035    17.688    
+    SLICE_X112Y139       FDCE (Setup_fdce_C_D)       -0.247    17.441    backend_inst/fc1_inst/out_pixels_reg[109][4]
+  -------------------------------------------------------------------
+                         required time                         17.441    
+                         arrival time                         -16.916    
+  -------------------------------------------------------------------
+                         slack                                  0.525    
+
+Slack (MET) :             0.531ns  (required time - arrival time)
+  Source:                 backend_inst/fc1_inst/px_d2_reg[15]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Destination:            backend_inst/fc1_inst/out_pixels_reg[105][4]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            12.500ns  (clk rise@12.500ns - clk rise@0.000ns)
+  Data Path Delay:        11.682ns  (logic 5.950ns (50.934%)  route 5.732ns (49.066%))
+  Logic Levels:           7  (CARRY4=4 DSP48E1=1 LUT2=1 LUT3=1)
+  Clock Path Skew:        0.043ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    4.846ns = ( 17.346 - 12.500 ) 
+    Source Clock Delay      (SCD):    5.178ns
+    Clock Pessimism Removal (CPR):    0.375ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+    U7                                                0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+    U7                   IBUF (Prop_ibuf_I_O)         1.058     1.058 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           2.171     3.229    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.101     3.330 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.848     5.178    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X37Y102        FDCE                                         r  backend_inst/fc1_inst/px_d2_reg[15]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X37Y102        FDCE (Prop_fdce_C_Q)         0.419     5.597 r  backend_inst/fc1_inst/px_d2_reg[15]/Q
+                         net (fo=15, routed)          0.843     6.440    backend_inst/fc1_inst/px_d2_reg_n_0_[15]
+    DSP48_X2Y41          DSP48E1 (Prop_dsp48e1_A[23]_P[22])
+                                                      4.013    10.453 r  backend_inst/fc1_inst/value/P[22]
+                         net (fo=3, routed)           1.201    11.655    backend_inst/fc1_inst/value_n_83
+    SLICE_X38Y103        LUT2 (Prop_lut2_I0_O)        0.124    11.779 r  backend_inst/fc1_inst/out_pixels[0][15]_i_29/O
+                         net (fo=1, routed)           0.000    11.779    backend_inst/fc1_inst/out_pixels[0][15]_i_29_n_0
+    SLICE_X38Y103        CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.513    12.292 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14/CO[3]
+                         net (fo=1, routed)           0.000    12.292    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14_n_0
+    SLICE_X38Y104        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.409 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8/CO[3]
+                         net (fo=1, routed)           0.000    12.409    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8_n_0
+    SLICE_X38Y105        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.526 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6/CO[3]
+                         net (fo=1, routed)           0.000    12.526    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6_n_0
+    SLICE_X38Y106        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    12.780 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_5/CO[0]
+                         net (fo=16, routed)          1.314    14.094    backend_inst/fc1_inst/p_1_in2_in
+    SLICE_X53Y113        LUT3 (Prop_lut3_I2_O)        0.393    14.487 r  backend_inst/fc1_inst/out_pixels[0][4]_i_1/O
+                         net (fo=128, routed)         2.374    16.860    backend_inst/fc1_inst/sat_relu0_return[4]
+    SLICE_X111Y137       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[105][4]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       12.500    12.500 r  
+    U7                                                0.000    12.500 r  clk (IN)
+                         net (fo=0)                   0.000    12.500    clk
+    U7                   IBUF (Prop_ibuf_I_O)         0.924    13.424 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           1.972    15.396    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.091    15.487 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.859    17.346    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X111Y137       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[105][4]/C
+                         clock pessimism              0.375    17.721    
+                         clock uncertainty           -0.035    17.686    
+    SLICE_X111Y137       FDCE (Setup_fdce_C_D)       -0.295    17.391    backend_inst/fc1_inst/out_pixels_reg[105][4]
+  -------------------------------------------------------------------
+                         required time                         17.391    
+                         arrival time                         -16.860    
+  -------------------------------------------------------------------
+                         slack                                  0.531    
+
+Slack (MET) :             0.538ns  (required time - arrival time)
+  Source:                 backend_inst/fc1_inst/px_d2_reg[15]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Destination:            backend_inst/fc1_inst/out_pixels_reg[90][4]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            12.500ns  (clk rise@12.500ns - clk rise@0.000ns)
+  Data Path Delay:        11.718ns  (logic 5.950ns (50.775%)  route 5.768ns (49.225%))
+  Logic Levels:           7  (CARRY4=4 DSP48E1=1 LUT2=1 LUT3=1)
+  Clock Path Skew:        0.039ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    4.842ns = ( 17.342 - 12.500 ) 
+    Source Clock Delay      (SCD):    5.178ns
+    Clock Pessimism Removal (CPR):    0.375ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+    U7                                                0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+    U7                   IBUF (Prop_ibuf_I_O)         1.058     1.058 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           2.171     3.229    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.101     3.330 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.848     5.178    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X37Y102        FDCE                                         r  backend_inst/fc1_inst/px_d2_reg[15]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X37Y102        FDCE (Prop_fdce_C_Q)         0.419     5.597 r  backend_inst/fc1_inst/px_d2_reg[15]/Q
+                         net (fo=15, routed)          0.843     6.440    backend_inst/fc1_inst/px_d2_reg_n_0_[15]
+    DSP48_X2Y41          DSP48E1 (Prop_dsp48e1_A[23]_P[22])
+                                                      4.013    10.453 r  backend_inst/fc1_inst/value/P[22]
+                         net (fo=3, routed)           1.201    11.655    backend_inst/fc1_inst/value_n_83
+    SLICE_X38Y103        LUT2 (Prop_lut2_I0_O)        0.124    11.779 r  backend_inst/fc1_inst/out_pixels[0][15]_i_29/O
+                         net (fo=1, routed)           0.000    11.779    backend_inst/fc1_inst/out_pixels[0][15]_i_29_n_0
+    SLICE_X38Y103        CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.513    12.292 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14/CO[3]
+                         net (fo=1, routed)           0.000    12.292    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14_n_0
+    SLICE_X38Y104        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.409 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8/CO[3]
+                         net (fo=1, routed)           0.000    12.409    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8_n_0
+    SLICE_X38Y105        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.526 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6/CO[3]
+                         net (fo=1, routed)           0.000    12.526    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6_n_0
+    SLICE_X38Y106        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    12.780 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_5/CO[0]
+                         net (fo=16, routed)          1.314    14.094    backend_inst/fc1_inst/p_1_in2_in
+    SLICE_X53Y113        LUT3 (Prop_lut3_I2_O)        0.393    14.487 r  backend_inst/fc1_inst/out_pixels[0][4]_i_1/O
+                         net (fo=128, routed)         2.410    16.897    backend_inst/fc1_inst/sat_relu0_return[4]
+    SLICE_X112Y132       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[90][4]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       12.500    12.500 r  
+    U7                                                0.000    12.500 r  clk (IN)
+                         net (fo=0)                   0.000    12.500    clk
+    U7                   IBUF (Prop_ibuf_I_O)         0.924    13.424 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           1.972    15.396    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.091    15.487 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.855    17.342    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X112Y132       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[90][4]/C
+                         clock pessimism              0.375    17.717    
+                         clock uncertainty           -0.035    17.682    
+    SLICE_X112Y132       FDCE (Setup_fdce_C_D)       -0.247    17.435    backend_inst/fc1_inst/out_pixels_reg[90][4]
+  -------------------------------------------------------------------
+                         required time                         17.435    
+                         arrival time                         -16.897    
+  -------------------------------------------------------------------
+                         slack                                  0.538    
+
+Slack (MET) :             0.541ns  (required time - arrival time)
+  Source:                 backend_inst/fc1_inst/px_d2_reg[15]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Destination:            backend_inst/fc1_inst/out_pixels_reg[104][4]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            12.500ns  (clk rise@12.500ns - clk rise@0.000ns)
+  Data Path Delay:        11.672ns  (logic 5.950ns (50.978%)  route 5.722ns (49.022%))
+  Logic Levels:           7  (CARRY4=4 DSP48E1=1 LUT2=1 LUT3=1)
+  Clock Path Skew:        0.042ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    4.845ns = ( 17.345 - 12.500 ) 
+    Source Clock Delay      (SCD):    5.178ns
+    Clock Pessimism Removal (CPR):    0.375ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+    U7                                                0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+    U7                   IBUF (Prop_ibuf_I_O)         1.058     1.058 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           2.171     3.229    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.101     3.330 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.848     5.178    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X37Y102        FDCE                                         r  backend_inst/fc1_inst/px_d2_reg[15]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X37Y102        FDCE (Prop_fdce_C_Q)         0.419     5.597 r  backend_inst/fc1_inst/px_d2_reg[15]/Q
+                         net (fo=15, routed)          0.843     6.440    backend_inst/fc1_inst/px_d2_reg_n_0_[15]
+    DSP48_X2Y41          DSP48E1 (Prop_dsp48e1_A[23]_P[22])
+                                                      4.013    10.453 r  backend_inst/fc1_inst/value/P[22]
+                         net (fo=3, routed)           1.201    11.655    backend_inst/fc1_inst/value_n_83
+    SLICE_X38Y103        LUT2 (Prop_lut2_I0_O)        0.124    11.779 r  backend_inst/fc1_inst/out_pixels[0][15]_i_29/O
+                         net (fo=1, routed)           0.000    11.779    backend_inst/fc1_inst/out_pixels[0][15]_i_29_n_0
+    SLICE_X38Y103        CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.513    12.292 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14/CO[3]
+                         net (fo=1, routed)           0.000    12.292    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14_n_0
+    SLICE_X38Y104        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.409 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8/CO[3]
+                         net (fo=1, routed)           0.000    12.409    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8_n_0
+    SLICE_X38Y105        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.526 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6/CO[3]
+                         net (fo=1, routed)           0.000    12.526    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6_n_0
+    SLICE_X38Y106        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    12.780 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_5/CO[0]
+                         net (fo=16, routed)          1.314    14.094    backend_inst/fc1_inst/p_1_in2_in
+    SLICE_X53Y113        LUT3 (Prop_lut3_I2_O)        0.393    14.487 r  backend_inst/fc1_inst/out_pixels[0][4]_i_1/O
+                         net (fo=128, routed)         2.363    16.850    backend_inst/fc1_inst/sat_relu0_return[4]
+    SLICE_X109Y139       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[104][4]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       12.500    12.500 r  
+    U7                                                0.000    12.500 r  clk (IN)
+                         net (fo=0)                   0.000    12.500    clk
+    U7                   IBUF (Prop_ibuf_I_O)         0.924    13.424 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           1.972    15.396    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.091    15.487 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.858    17.345    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X109Y139       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[104][4]/C
+                         clock pessimism              0.375    17.720    
+                         clock uncertainty           -0.035    17.685    
+    SLICE_X109Y139       FDCE (Setup_fdce_C_D)       -0.294    17.391    backend_inst/fc1_inst/out_pixels_reg[104][4]
+  -------------------------------------------------------------------
+                         required time                         17.391    
+                         arrival time                         -16.850    
+  -------------------------------------------------------------------
+                         slack                                  0.541    
+
+Slack (MET) :             0.546ns  (required time - arrival time)
+  Source:                 backend_inst/fc1_inst/px_d2_reg[15]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Destination:            backend_inst/fc1_inst/out_pixels_reg[98][6]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            12.500ns  (clk rise@12.500ns - clk rise@0.000ns)
+  Data Path Delay:        11.675ns  (logic 5.919ns (50.700%)  route 5.756ns (49.300%))
+  Logic Levels:           7  (CARRY4=4 DSP48E1=1 LUT2=1 LUT3=1)
+  Clock Path Skew:        0.045ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    4.848ns = ( 17.348 - 12.500 ) 
+    Source Clock Delay      (SCD):    5.178ns
+    Clock Pessimism Removal (CPR):    0.375ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+    U7                                                0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+    U7                   IBUF (Prop_ibuf_I_O)         1.058     1.058 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           2.171     3.229    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.101     3.330 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.848     5.178    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X37Y102        FDCE                                         r  backend_inst/fc1_inst/px_d2_reg[15]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X37Y102        FDCE (Prop_fdce_C_Q)         0.419     5.597 r  backend_inst/fc1_inst/px_d2_reg[15]/Q
+                         net (fo=15, routed)          0.843     6.440    backend_inst/fc1_inst/px_d2_reg_n_0_[15]
+    DSP48_X2Y41          DSP48E1 (Prop_dsp48e1_A[23]_P[22])
+                                                      4.013    10.453 r  backend_inst/fc1_inst/value/P[22]
+                         net (fo=3, routed)           1.201    11.655    backend_inst/fc1_inst/value_n_83
+    SLICE_X38Y103        LUT2 (Prop_lut2_I0_O)        0.124    11.779 r  backend_inst/fc1_inst/out_pixels[0][15]_i_29/O
+                         net (fo=1, routed)           0.000    11.779    backend_inst/fc1_inst/out_pixels[0][15]_i_29_n_0
+    SLICE_X38Y103        CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.513    12.292 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14/CO[3]
+                         net (fo=1, routed)           0.000    12.292    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14_n_0
+    SLICE_X38Y104        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.409 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8/CO[3]
+                         net (fo=1, routed)           0.000    12.409    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8_n_0
+    SLICE_X38Y105        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.526 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6/CO[3]
+                         net (fo=1, routed)           0.000    12.526    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6_n_0
+    SLICE_X38Y106        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    12.780 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_5/CO[0]
+                         net (fo=16, routed)          1.138    13.918    backend_inst/fc1_inst/p_1_in2_in
+    SLICE_X53Y112        LUT3 (Prop_lut3_I2_O)        0.362    14.280 r  backend_inst/fc1_inst/out_pixels[0][6]_i_1/O
+                         net (fo=128, routed)         2.573    16.853    backend_inst/fc1_inst/sat_relu0_return[6]
+    SLICE_X113Y139       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[98][6]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       12.500    12.500 r  
+    U7                                                0.000    12.500 r  clk (IN)
+                         net (fo=0)                   0.000    12.500    clk
+    U7                   IBUF (Prop_ibuf_I_O)         0.924    13.424 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           1.972    15.396    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.091    15.487 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.861    17.348    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X113Y139       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[98][6]/C
+                         clock pessimism              0.375    17.723    
+                         clock uncertainty           -0.035    17.688    
+    SLICE_X113Y139       FDCE (Setup_fdce_C_D)       -0.289    17.399    backend_inst/fc1_inst/out_pixels_reg[98][6]
+  -------------------------------------------------------------------
+                         required time                         17.399    
+                         arrival time                         -16.853    
+  -------------------------------------------------------------------
+                         slack                                  0.546    
+
+Slack (MET) :             0.547ns  (required time - arrival time)
+  Source:                 backend_inst/fc1_inst/px_d2_reg[15]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Destination:            backend_inst/fc1_inst/out_pixels_reg[96][4]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            12.500ns  (clk rise@12.500ns - clk rise@0.000ns)
+  Data Path Delay:        11.673ns  (logic 5.950ns (50.972%)  route 5.723ns (49.028%))
+  Logic Levels:           7  (CARRY4=4 DSP48E1=1 LUT2=1 LUT3=1)
+  Clock Path Skew:        0.039ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    4.842ns = ( 17.342 - 12.500 ) 
+    Source Clock Delay      (SCD):    5.178ns
+    Clock Pessimism Removal (CPR):    0.375ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+    U7                                                0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+    U7                   IBUF (Prop_ibuf_I_O)         1.058     1.058 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           2.171     3.229    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.101     3.330 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.848     5.178    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X37Y102        FDCE                                         r  backend_inst/fc1_inst/px_d2_reg[15]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X37Y102        FDCE (Prop_fdce_C_Q)         0.419     5.597 r  backend_inst/fc1_inst/px_d2_reg[15]/Q
+                         net (fo=15, routed)          0.843     6.440    backend_inst/fc1_inst/px_d2_reg_n_0_[15]
+    DSP48_X2Y41          DSP48E1 (Prop_dsp48e1_A[23]_P[22])
+                                                      4.013    10.453 r  backend_inst/fc1_inst/value/P[22]
+                         net (fo=3, routed)           1.201    11.655    backend_inst/fc1_inst/value_n_83
+    SLICE_X38Y103        LUT2 (Prop_lut2_I0_O)        0.124    11.779 r  backend_inst/fc1_inst/out_pixels[0][15]_i_29/O
+                         net (fo=1, routed)           0.000    11.779    backend_inst/fc1_inst/out_pixels[0][15]_i_29_n_0
+    SLICE_X38Y103        CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.513    12.292 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14/CO[3]
+                         net (fo=1, routed)           0.000    12.292    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14_n_0
+    SLICE_X38Y104        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.409 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8/CO[3]
+                         net (fo=1, routed)           0.000    12.409    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8_n_0
+    SLICE_X38Y105        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.526 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6/CO[3]
+                         net (fo=1, routed)           0.000    12.526    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6_n_0
+    SLICE_X38Y106        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    12.780 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_5/CO[0]
+                         net (fo=16, routed)          1.314    14.094    backend_inst/fc1_inst/p_1_in2_in
+    SLICE_X53Y113        LUT3 (Prop_lut3_I2_O)        0.393    14.487 r  backend_inst/fc1_inst/out_pixels[0][4]_i_1/O
+                         net (fo=128, routed)         2.365    16.852    backend_inst/fc1_inst/sat_relu0_return[4]
+    SLICE_X107Y135       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[96][4]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       12.500    12.500 r  
+    U7                                                0.000    12.500 r  clk (IN)
+                         net (fo=0)                   0.000    12.500    clk
+    U7                   IBUF (Prop_ibuf_I_O)         0.924    13.424 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           1.972    15.396    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.091    15.487 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.855    17.342    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X107Y135       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[96][4]/C
+                         clock pessimism              0.375    17.717    
+                         clock uncertainty           -0.035    17.682    
+    SLICE_X107Y135       FDCE (Setup_fdce_C_D)       -0.283    17.399    backend_inst/fc1_inst/out_pixels_reg[96][4]
+  -------------------------------------------------------------------
+                         required time                         17.399    
+                         arrival time                         -16.852    
+  -------------------------------------------------------------------
+                         slack                                  0.547    
+
+Slack (MET) :             0.551ns  (required time - arrival time)
+  Source:                 backend_inst/fc1_inst/px_d2_reg[15]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Destination:            backend_inst/fc1_inst/out_pixels_reg[98][4]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            12.500ns  (clk rise@12.500ns - clk rise@0.000ns)
+  Data Path Delay:        11.719ns  (logic 5.950ns (50.771%)  route 5.769ns (49.229%))
+  Logic Levels:           7  (CARRY4=4 DSP48E1=1 LUT2=1 LUT3=1)
+  Clock Path Skew:        0.039ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    4.842ns = ( 17.342 - 12.500 ) 
+    Source Clock Delay      (SCD):    5.178ns
+    Clock Pessimism Removal (CPR):    0.375ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+    U7                                                0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+    U7                   IBUF (Prop_ibuf_I_O)         1.058     1.058 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           2.171     3.229    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.101     3.330 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.848     5.178    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X37Y102        FDCE                                         r  backend_inst/fc1_inst/px_d2_reg[15]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X37Y102        FDCE (Prop_fdce_C_Q)         0.419     5.597 r  backend_inst/fc1_inst/px_d2_reg[15]/Q
+                         net (fo=15, routed)          0.843     6.440    backend_inst/fc1_inst/px_d2_reg_n_0_[15]
+    DSP48_X2Y41          DSP48E1 (Prop_dsp48e1_A[23]_P[22])
+                                                      4.013    10.453 r  backend_inst/fc1_inst/value/P[22]
+                         net (fo=3, routed)           1.201    11.655    backend_inst/fc1_inst/value_n_83
+    SLICE_X38Y103        LUT2 (Prop_lut2_I0_O)        0.124    11.779 r  backend_inst/fc1_inst/out_pixels[0][15]_i_29/O
+                         net (fo=1, routed)           0.000    11.779    backend_inst/fc1_inst/out_pixels[0][15]_i_29_n_0
+    SLICE_X38Y103        CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.513    12.292 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14/CO[3]
+                         net (fo=1, routed)           0.000    12.292    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14_n_0
+    SLICE_X38Y104        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.409 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8/CO[3]
+                         net (fo=1, routed)           0.000    12.409    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8_n_0
+    SLICE_X38Y105        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.526 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6/CO[3]
+                         net (fo=1, routed)           0.000    12.526    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6_n_0
+    SLICE_X38Y106        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    12.780 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_5/CO[0]
+                         net (fo=16, routed)          1.314    14.094    backend_inst/fc1_inst/p_1_in2_in
+    SLICE_X53Y113        LUT3 (Prop_lut3_I2_O)        0.393    14.487 r  backend_inst/fc1_inst/out_pixels[0][4]_i_1/O
+                         net (fo=128, routed)         2.411    16.898    backend_inst/fc1_inst/sat_relu0_return[4]
+    SLICE_X108Y136       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[98][4]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       12.500    12.500 r  
+    U7                                                0.000    12.500 r  clk (IN)
+                         net (fo=0)                   0.000    12.500    clk
+    U7                   IBUF (Prop_ibuf_I_O)         0.924    13.424 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           1.972    15.396    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.091    15.487 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.855    17.342    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X108Y136       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[98][4]/C
+                         clock pessimism              0.375    17.717    
+                         clock uncertainty           -0.035    17.682    
+    SLICE_X108Y136       FDCE (Setup_fdce_C_D)       -0.233    17.449    backend_inst/fc1_inst/out_pixels_reg[98][4]
+  -------------------------------------------------------------------
+                         required time                         17.449    
+                         arrival time                         -16.898    
+  -------------------------------------------------------------------
+                         slack                                  0.551    
+
+Slack (MET) :             0.551ns  (required time - arrival time)
+  Source:                 backend_inst/fc1_inst/px_d2_reg[15]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Destination:            backend_inst/fc1_inst/out_pixels_reg[41][1]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            12.500ns  (clk rise@12.500ns - clk rise@0.000ns)
+  Data Path Delay:        11.639ns  (logic 5.918ns (50.847%)  route 5.721ns (49.153%))
+  Logic Levels:           7  (CARRY4=4 DSP48E1=1 LUT2=1 LUT3=1)
+  Clock Path Skew:        0.033ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    4.836ns = ( 17.336 - 12.500 ) 
+    Source Clock Delay      (SCD):    5.178ns
+    Clock Pessimism Removal (CPR):    0.375ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+    U7                                                0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+    U7                   IBUF (Prop_ibuf_I_O)         1.058     1.058 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           2.171     3.229    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.101     3.330 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.848     5.178    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X37Y102        FDCE                                         r  backend_inst/fc1_inst/px_d2_reg[15]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X37Y102        FDCE (Prop_fdce_C_Q)         0.419     5.597 r  backend_inst/fc1_inst/px_d2_reg[15]/Q
+                         net (fo=15, routed)          0.843     6.440    backend_inst/fc1_inst/px_d2_reg_n_0_[15]
+    DSP48_X2Y41          DSP48E1 (Prop_dsp48e1_A[23]_P[22])
+                                                      4.013    10.453 r  backend_inst/fc1_inst/value/P[22]
+                         net (fo=3, routed)           1.201    11.655    backend_inst/fc1_inst/value_n_83
+    SLICE_X38Y103        LUT2 (Prop_lut2_I0_O)        0.124    11.779 r  backend_inst/fc1_inst/out_pixels[0][15]_i_29/O
+                         net (fo=1, routed)           0.000    11.779    backend_inst/fc1_inst/out_pixels[0][15]_i_29_n_0
+    SLICE_X38Y103        CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.513    12.292 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14/CO[3]
+                         net (fo=1, routed)           0.000    12.292    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14_n_0
+    SLICE_X38Y104        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.409 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8/CO[3]
+                         net (fo=1, routed)           0.000    12.409    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8_n_0
+    SLICE_X38Y105        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.526 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6/CO[3]
+                         net (fo=1, routed)           0.000    12.526    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6_n_0
+    SLICE_X38Y106        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    12.780 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_5/CO[0]
+                         net (fo=16, routed)          1.057    13.836    backend_inst/fc1_inst/p_1_in2_in
+    SLICE_X51Y111        LUT3 (Prop_lut3_I2_O)        0.361    14.197 r  backend_inst/fc1_inst/out_pixels[0][1]_i_1/O
+                         net (fo=128, routed)         2.620    16.817    backend_inst/fc1_inst/sat_relu0_return[1]
+    SLICE_X109Y120       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[41][1]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       12.500    12.500 r  
+    U7                                                0.000    12.500 r  clk (IN)
+                         net (fo=0)                   0.000    12.500    clk
+    U7                   IBUF (Prop_ibuf_I_O)         0.924    13.424 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           1.972    15.396    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.091    15.487 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.849    17.336    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X109Y120       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[41][1]/C
+                         clock pessimism              0.375    17.711    
+                         clock uncertainty           -0.035    17.676    
+    SLICE_X109Y120       FDCE (Setup_fdce_C_D)       -0.307    17.369    backend_inst/fc1_inst/out_pixels_reg[41][1]
+  -------------------------------------------------------------------
+                         required time                         17.369    
+                         arrival time                         -16.817    
+  -------------------------------------------------------------------
+                         slack                                  0.551    
+
+Slack (MET) :             0.553ns  (required time - arrival time)
+  Source:                 backend_inst/fc1_inst/px_d2_reg[15]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Destination:            backend_inst/fc1_inst/out_pixels_reg[107][4]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            12.500ns  (clk rise@12.500ns - clk rise@0.000ns)
+  Data Path Delay:        11.707ns  (logic 5.950ns (50.826%)  route 5.757ns (49.174%))
+  Logic Levels:           7  (CARRY4=4 DSP48E1=1 LUT2=1 LUT3=1)
+  Clock Path Skew:        0.040ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    4.843ns = ( 17.343 - 12.500 ) 
+    Source Clock Delay      (SCD):    5.178ns
+    Clock Pessimism Removal (CPR):    0.375ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+    U7                                                0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+    U7                   IBUF (Prop_ibuf_I_O)         1.058     1.058 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           2.171     3.229    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.101     3.330 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.848     5.178    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X37Y102        FDCE                                         r  backend_inst/fc1_inst/px_d2_reg[15]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X37Y102        FDCE (Prop_fdce_C_Q)         0.419     5.597 r  backend_inst/fc1_inst/px_d2_reg[15]/Q
+                         net (fo=15, routed)          0.843     6.440    backend_inst/fc1_inst/px_d2_reg_n_0_[15]
+    DSP48_X2Y41          DSP48E1 (Prop_dsp48e1_A[23]_P[22])
+                                                      4.013    10.453 r  backend_inst/fc1_inst/value/P[22]
+                         net (fo=3, routed)           1.201    11.655    backend_inst/fc1_inst/value_n_83
+    SLICE_X38Y103        LUT2 (Prop_lut2_I0_O)        0.124    11.779 r  backend_inst/fc1_inst/out_pixels[0][15]_i_29/O
+                         net (fo=1, routed)           0.000    11.779    backend_inst/fc1_inst/out_pixels[0][15]_i_29_n_0
+    SLICE_X38Y103        CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.513    12.292 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14/CO[3]
+                         net (fo=1, routed)           0.000    12.292    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14_n_0
+    SLICE_X38Y104        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.409 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8/CO[3]
+                         net (fo=1, routed)           0.000    12.409    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8_n_0
+    SLICE_X38Y105        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.526 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6/CO[3]
+                         net (fo=1, routed)           0.000    12.526    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6_n_0
+    SLICE_X38Y106        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    12.780 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_5/CO[0]
+                         net (fo=16, routed)          1.314    14.094    backend_inst/fc1_inst/p_1_in2_in
+    SLICE_X53Y113        LUT3 (Prop_lut3_I2_O)        0.393    14.487 r  backend_inst/fc1_inst/out_pixels[0][4]_i_1/O
+                         net (fo=128, routed)         2.398    16.885    backend_inst/fc1_inst/sat_relu0_return[4]
+    SLICE_X108Y137       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[107][4]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       12.500    12.500 r  
+    U7                                                0.000    12.500 r  clk (IN)
+                         net (fo=0)                   0.000    12.500    clk
+    U7                   IBUF (Prop_ibuf_I_O)         0.924    13.424 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           1.972    15.396    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.091    15.487 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.856    17.343    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X108Y137       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[107][4]/C
+                         clock pessimism              0.375    17.718    
+                         clock uncertainty           -0.035    17.683    
+    SLICE_X108Y137       FDCE (Setup_fdce_C_D)       -0.245    17.438    backend_inst/fc1_inst/out_pixels_reg[107][4]
+  -------------------------------------------------------------------
+                         required time                         17.438    
+                         arrival time                         -16.885    
+  -------------------------------------------------------------------
+                         slack                                  0.553    
+
+Slack (MET) :             0.555ns  (required time - arrival time)
+  Source:                 backend_inst/fc1_inst/px_d2_reg[15]/C
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Destination:            backend_inst/fc1_inst/out_pixels_reg[95][1]/D
+                            (rising edge-triggered cell FDCE clocked by clk  {rise@0.000ns fall@6.250ns period=12.500ns})
+  Path Group:             clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            12.500ns  (clk rise@12.500ns - clk rise@0.000ns)
+  Data Path Delay:        11.678ns  (logic 5.918ns (50.676%)  route 5.760ns (49.324%))
+  Logic Levels:           7  (CARRY4=4 DSP48E1=1 LUT2=1 LUT3=1)
+  Clock Path Skew:        0.032ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    4.835ns = ( 17.335 - 12.500 ) 
+    Source Clock Delay      (SCD):    5.178ns
+    Clock Pessimism Removal (CPR):    0.375ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk rise edge)        0.000     0.000 r  
+    U7                                                0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+    U7                   IBUF (Prop_ibuf_I_O)         1.058     1.058 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           2.171     3.229    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.101     3.330 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.848     5.178    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X37Y102        FDCE                                         r  backend_inst/fc1_inst/px_d2_reg[15]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X37Y102        FDCE (Prop_fdce_C_Q)         0.419     5.597 r  backend_inst/fc1_inst/px_d2_reg[15]/Q
+                         net (fo=15, routed)          0.843     6.440    backend_inst/fc1_inst/px_d2_reg_n_0_[15]
+    DSP48_X2Y41          DSP48E1 (Prop_dsp48e1_A[23]_P[22])
+                                                      4.013    10.453 r  backend_inst/fc1_inst/value/P[22]
+                         net (fo=3, routed)           1.201    11.655    backend_inst/fc1_inst/value_n_83
+    SLICE_X38Y103        LUT2 (Prop_lut2_I0_O)        0.124    11.779 r  backend_inst/fc1_inst/out_pixels[0][15]_i_29/O
+                         net (fo=1, routed)           0.000    11.779    backend_inst/fc1_inst/out_pixels[0][15]_i_29_n_0
+    SLICE_X38Y103        CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.513    12.292 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14/CO[3]
+                         net (fo=1, routed)           0.000    12.292    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_14_n_0
+    SLICE_X38Y104        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.409 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8/CO[3]
+                         net (fo=1, routed)           0.000    12.409    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_8_n_0
+    SLICE_X38Y105        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    12.526 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6/CO[3]
+                         net (fo=1, routed)           0.000    12.526    backend_inst/fc1_inst/out_pixels_reg[0][15]_i_6_n_0
+    SLICE_X38Y106        CARRY4 (Prop_carry4_CI_CO[0])
+                                                      0.254    12.780 r  backend_inst/fc1_inst/out_pixels_reg[0][15]_i_5/CO[0]
+                         net (fo=16, routed)          1.057    13.836    backend_inst/fc1_inst/p_1_in2_in
+    SLICE_X51Y111        LUT3 (Prop_lut3_I2_O)        0.361    14.197 r  backend_inst/fc1_inst/out_pixels[0][1]_i_1/O
+                         net (fo=128, routed)         2.659    16.857    backend_inst/fc1_inst/sat_relu0_return[1]
+    SLICE_X113Y126       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[95][1]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk rise edge)       12.500    12.500 r  
+    U7                                                0.000    12.500 r  clk (IN)
+                         net (fo=0)                   0.000    12.500    clk
+    U7                   IBUF (Prop_ibuf_I_O)         0.924    13.424 r  clk_IBUF_inst/O
+                         net (fo=1, routed)           1.972    15.396    clk_IBUF
+    BUFGCTRL_X0Y0        BUFG (Prop_bufg_I_O)         0.091    15.487 r  clk_IBUF_BUFG_inst/O
+                         net (fo=46150, routed)       1.848    17.335    backend_inst/fc1_inst/clk_IBUF_BUFG
+    SLICE_X113Y126       FDCE                                         r  backend_inst/fc1_inst/out_pixels_reg[95][1]/C
+                         clock pessimism              0.375    17.710    
+                         clock uncertainty           -0.035    17.675    
+    SLICE_X113Y126       FDCE (Setup_fdce_C_D)       -0.263    17.412    backend_inst/fc1_inst/out_pixels_reg[95][1]
+  -------------------------------------------------------------------
+                         required time                         17.412    
+                         arrival time                         -16.857    
+  -------------------------------------------------------------------
+                         slack                                  0.555    
+
+
+
+

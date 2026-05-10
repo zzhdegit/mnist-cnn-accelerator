@@ -16,12 +16,38 @@ module top_mnist #(
 );
 
     wire v_c1, r_c1, v_c2, r_c2;
+    wire r_input_to_conv1;
     wire signed [DATA_WIDTH-1:0] p_c1_serial, p_c2_serial;
+
+    (* IOB = "true" *) reg ready_out_q;
+    reg in_buf_valid;
+    reg signed [DATA_WIDTH-1:0] in_buf_pixel;
+    wire conv1_accept = in_buf_valid && r_input_to_conv1;
+    wire input_accept = valid_in && ready_out_q;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            ready_out_q <= 1'b1;
+            in_buf_valid <= 1'b0;
+            in_buf_pixel <= '0;
+        end else begin
+            if (conv1_accept) begin
+                in_buf_valid <= 1'b0;
+            end
+            if (input_accept) begin
+                in_buf_valid <= 1'b1;
+                in_buf_pixel <= pixel_in;
+            end
+            ready_out_q <= !((in_buf_valid && !conv1_accept) || input_accept);
+        end
+    end
+
+    assign ready_out = ready_out_q;
 
     // 1. Conv1
     conv1_layer_v5 conv1_inst (
-        .clk(clk), .rst_n(rst_n), .valid_in(valid_in), .ready_out(ready_out), 
-        .pixel_in(pixel_in), .valid_out(v_c1), .ready_in(r_c1),
+        .clk(clk), .rst_n(rst_n), .valid_in(in_buf_valid), .ready_out(r_input_to_conv1),
+        .pixel_in(in_buf_pixel), .valid_out(v_c1), .ready_in(r_c1),
         .pixel_out(p_c1_serial)
     );
 

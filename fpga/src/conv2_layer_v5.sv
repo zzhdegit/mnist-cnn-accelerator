@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-// Zynq-7020 Conv2 (v8.3 - Synchronous 16-MAC Pipelined)
+// Zynq-7020 Conv2 (v8.4 - Synchronous 32-MAC Pipelined)
 module conv2_layer_v5 #(
     parameter DATA_WIDTH = 16,
     parameter IN_CHANNELS = 32,
@@ -18,52 +18,77 @@ module conv2_layer_v5 #(
     output reg signed [DATA_WIDTH-1:0] pixel_out
 );
 
-    reg signed [DATA_WIDTH-1:0] w_mem_all [0:18431];
     reg signed [DATA_WIDTH-1:0] b_mem_all [0:63];
     
-    // Using 16 individual ROMs to force BRAM inference and improve timing
-    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_0 [0:1151];
-    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_1 [0:1151];
-    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_2 [0:1151];
-    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_3 [0:1151];
-    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_4 [0:1151];
-    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_5 [0:1151];
-    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_6 [0:1151];
-    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_7 [0:1151];
-    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_8 [0:1151];
-    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_9 [0:1151];
-    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_10 [0:1151];
-    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_11 [0:1151];
-    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_12 [0:1151];
-    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_13 [0:1151];
-    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_14 [0:1151];
-    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_15 [0:1151];
+    // One initialized ROM per parallel output channel.  Each bank stores two
+    // output-channel groups: group 0 => oc 0..31, group 1 => oc 32..63.
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_0 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_1 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_2 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_3 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_4 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_5 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_6 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_7 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_8 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_9 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_10 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_11 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_12 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_13 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_14 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_15 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_16 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_17 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_18 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_19 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_20 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_21 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_22 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_23 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_24 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_25 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_26 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_27 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_28 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_29 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_30 [0:575];
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_31 [0:575];
 
     initial begin
-        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w.hex", w_mem_all);
         $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_b.hex", b_mem_all);
-        for (integer b=0; b<4; b=b+1) begin
-            for (integer ic=0; ic<32; ic=ic+1) begin
-                for (integer k=0; k<9; k=k+1) begin
-                    w_rom_0[b*288 + ic*9 + k] = w_mem_all[(b*16 + 0)*288 + ic*9 + k];
-                    w_rom_1[b*288 + ic*9 + k] = w_mem_all[(b*16 + 1)*288 + ic*9 + k];
-                    w_rom_2[b*288 + ic*9 + k] = w_mem_all[(b*16 + 2)*288 + ic*9 + k];
-                    w_rom_3[b*288 + ic*9 + k] = w_mem_all[(b*16 + 3)*288 + ic*9 + k];
-                    w_rom_4[b*288 + ic*9 + k] = w_mem_all[(b*16 + 4)*288 + ic*9 + k];
-                    w_rom_5[b*288 + ic*9 + k] = w_mem_all[(b*16 + 5)*288 + ic*9 + k];
-                    w_rom_6[b*288 + ic*9 + k] = w_mem_all[(b*16 + 6)*288 + ic*9 + k];
-                    w_rom_7[b*288 + ic*9 + k] = w_mem_all[(b*16 + 7)*288 + ic*9 + k];
-                    w_rom_8[b*288 + ic*9 + k] = w_mem_all[(b*16 + 8)*288 + ic*9 + k];
-                    w_rom_9[b*288 + ic*9 + k] = w_mem_all[(b*16 + 9)*288 + ic*9 + k];
-                    w_rom_10[b*288 + ic*9 + k] = w_mem_all[(b*16 + 10)*288 + ic*9 + k];
-                    w_rom_11[b*288 + ic*9 + k] = w_mem_all[(b*16 + 11)*288 + ic*9 + k];
-                    w_rom_12[b*288 + ic*9 + k] = w_mem_all[(b*16 + 12)*288 + ic*9 + k];
-                    w_rom_13[b*288 + ic*9 + k] = w_mem_all[(b*16 + 13)*288 + ic*9 + k];
-                    w_rom_14[b*288 + ic*9 + k] = w_mem_all[(b*16 + 14)*288 + ic*9 + k];
-                    w_rom_15[b*288 + ic*9 + k] = w_mem_all[(b*16 + 15)*288 + ic*9 + k];
-                end
-            end
-        end
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank0.hex", w_rom_0);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank1.hex", w_rom_1);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank2.hex", w_rom_2);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank3.hex", w_rom_3);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank4.hex", w_rom_4);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank5.hex", w_rom_5);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank6.hex", w_rom_6);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank7.hex", w_rom_7);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank8.hex", w_rom_8);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank9.hex", w_rom_9);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank10.hex", w_rom_10);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank11.hex", w_rom_11);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank12.hex", w_rom_12);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank13.hex", w_rom_13);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank14.hex", w_rom_14);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank15.hex", w_rom_15);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank16.hex", w_rom_16);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank17.hex", w_rom_17);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank18.hex", w_rom_18);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank19.hex", w_rom_19);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank20.hex", w_rom_20);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank21.hex", w_rom_21);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank22.hex", w_rom_22);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank23.hex", w_rom_23);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank24.hex", w_rom_24);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank25.hex", w_rom_25);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank26.hex", w_rom_26);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank27.hex", w_rom_27);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank28.hex", w_rom_28);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank29.hex", w_rom_29);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank30.hex", w_rom_30);
+        $readmemh("D:/IC_Workspace/mnist/fpga/data/conv2_w_bank31.hex", w_rom_31);
     end
 
     wire lb_ready_internal;
@@ -95,7 +120,7 @@ module conv2_layer_v5 #(
     typedef enum {IDLE, COMPUTE, WAIT_PIPE, SERIAL_OUT} state_t;
     state_t state;
     
-    reg [2:0] batch_idx; reg [5:0] ic_idx; reg [3:0] k_idx; reg [5:0] serial_oc;
+    reg batch_idx; reg [5:0] ic_idx; reg [3:0] k_idx; reg [5:0] serial_oc;
     wire lb_ready = (state == SERIAL_OUT && serial_oc == 63 && valid_out && ready_in);
 
     line_buffer #(512, 26) lb_inst (
@@ -104,9 +129,9 @@ module conv2_layer_v5 #(
         .pixel_out(lb_out)
     );
 
-    reg signed [39:0] acc [0:15];
+    reg signed [39:0] acc [0:31];
     reg signed [DATA_WIDTH-1:0] results [0:63];
-    reg signed [15:0] w_read [0:15];
+    reg signed [15:0] w_read [0:31];
     reg signed [15:0] px_read;
 
     always @(posedge clk or negedge rst_n) begin
@@ -114,7 +139,9 @@ module conv2_layer_v5 #(
             state <= IDLE; batch_idx <= 0; ic_idx <= 0; k_idx <= 0;
             valid_out <= 0; pixel_out <= 0; serial_oc <= 0;
             for(integer i=0; i<64; i++) results[i] <= 0;
-            for(integer m=0; m<16; m++) acc[m] <= 0;
+            for(integer m=0; m<32; m++) acc[m] <= 0;
+            for(integer m=0; m<32; m++) w_read[m] <= 0;
+            px_read <= 0;
         end else begin
             case (state)
                 IDLE: begin
@@ -122,7 +149,7 @@ module conv2_layer_v5 #(
                     if (lb_valid) begin
                         state <= COMPUTE;
                         batch_idx <= 0; ic_idx <= 0; k_idx <= 0;
-                        for(integer m=0; m<16; m++) acc[m] <= (b_mem_all[0*16 + m] <<< 8);
+                        for(integer m=0; m<32; m++) acc[m] <= (b_mem_all[m] <<< 8);
                     end
                 end
 
@@ -145,10 +172,26 @@ module conv2_layer_v5 #(
                     w_read[13] <= w_rom_13[batch_idx*288 + ic_idx*9 + k_idx];
                     w_read[14] <= w_rom_14[batch_idx*288 + ic_idx*9 + k_idx];
                     w_read[15] <= w_rom_15[batch_idx*288 + ic_idx*9 + k_idx];
+                    w_read[16] <= w_rom_16[batch_idx*288 + ic_idx*9 + k_idx];
+                    w_read[17] <= w_rom_17[batch_idx*288 + ic_idx*9 + k_idx];
+                    w_read[18] <= w_rom_18[batch_idx*288 + ic_idx*9 + k_idx];
+                    w_read[19] <= w_rom_19[batch_idx*288 + ic_idx*9 + k_idx];
+                    w_read[20] <= w_rom_20[batch_idx*288 + ic_idx*9 + k_idx];
+                    w_read[21] <= w_rom_21[batch_idx*288 + ic_idx*9 + k_idx];
+                    w_read[22] <= w_rom_22[batch_idx*288 + ic_idx*9 + k_idx];
+                    w_read[23] <= w_rom_23[batch_idx*288 + ic_idx*9 + k_idx];
+                    w_read[24] <= w_rom_24[batch_idx*288 + ic_idx*9 + k_idx];
+                    w_read[25] <= w_rom_25[batch_idx*288 + ic_idx*9 + k_idx];
+                    w_read[26] <= w_rom_26[batch_idx*288 + ic_idx*9 + k_idx];
+                    w_read[27] <= w_rom_27[batch_idx*288 + ic_idx*9 + k_idx];
+                    w_read[28] <= w_rom_28[batch_idx*288 + ic_idx*9 + k_idx];
+                    w_read[29] <= w_rom_29[batch_idx*288 + ic_idx*9 + k_idx];
+                    w_read[30] <= w_rom_30[batch_idx*288 + ic_idx*9 + k_idx];
+                    w_read[31] <= w_rom_31[batch_idx*288 + ic_idx*9 + k_idx];
                     px_read <= lb_out[k_idx][ic_idx*16 +: 16];
 
                     // Pipeline Stage 2: Multiply & Accumulate (Delayed by 1 cycle)
-                    for (integer m=0; m<16; m=m+1) begin
+                    for (integer m=0; m<32; m=m+1) begin
                         acc[m] <= acc[m] + ($signed(px_read) * $signed(w_read[m]));
                     end
 
@@ -164,12 +207,12 @@ module conv2_layer_v5 #(
 
                 WAIT_PIPE: begin
                     // Final Accumulation cycle for the last product
-                    for (integer m=0; m<16; m=m+1) begin
+                    for (integer m=0; m<32; m=m+1) begin
                         automatic logic signed [39:0] res = acc[m] + ($signed(px_read) * $signed(w_read[m]));
-                        results[batch_idx*16 + m] <= (res >>> 8 > 32767) ? 16'h7FFF : (res >>> 8 < 0) ? 16'd0 : res[23:8];
+                        results[batch_idx*32 + m] <= (res >>> 8 > 32767) ? 16'h7FFF : (res >>> 8 < 0) ? 16'd0 : res[23:8];
                     end
                     
-                    if (batch_idx == 3) begin
+                    if (batch_idx == 1) begin
                         state <= SERIAL_OUT;
                         serial_oc <= 0; valid_out <= 1;
                         // Pre-calculate results[0] immediately for simulation
@@ -179,7 +222,7 @@ module conv2_layer_v5 #(
                         end
                     end else begin
                         batch_idx <= batch_idx + 1;
-                        for(integer m=0; m<16; m++) acc[m] <= (b_mem_all[(batch_idx+1)*16 + m] <<< 8);
+                        for(integer m=0; m<32; m++) acc[m] <= (b_mem_all[32 + m] <<< 8);
                         state <= COMPUTE;
                     end
                 end

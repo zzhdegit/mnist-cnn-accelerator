@@ -14,7 +14,7 @@ class Net(nn.Module):
         self.conv2 = nn.Conv2d(32, 64, 3, 1)
         self.dropout1 = nn.Dropout(0.25)
         self.dropout2 = nn.Dropout(0.5)
-        self.fc1 = nn.Linear(64, 128) # Updated: 64 channels * 1 * 1 = 64
+        self.fc1 = nn.Linear(256, 128)
         self.fc2 = nn.Linear(128, 10)
 
     def forward(self, x):
@@ -24,8 +24,8 @@ class Net(nn.Module):
         x = F.relu(x)
         x = F.max_pool2d(x, 2)
         x = self.dropout1(x)
-        # Global Average Pooling (1x1) for 90% target
-        x = F.adaptive_avg_pool2d(x, (1, 1))
+        # 12x12 -> 2x2, preserving coarse spatial information within 7020 limits.
+        x = F.max_pool2d(x, 6)
         x = torch.flatten(x, 1)
         x = self.fc1(x)
         x = F.relu(x)

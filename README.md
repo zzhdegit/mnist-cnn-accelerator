@@ -1,87 +1,194 @@
-# 基于 Zynq-7020 的高性能 MNIST CNN 硬件加速器 (V8.3)
+# FPGA Handwritten Digit Recognition
 
-本项目实现了一个高度优化的卷积神经网络（CNN）硬件加速器，专门针对资源受限的 **Xilinx Zynq-7020 FPGA** 设计。该加速器采用全流水线、适度并行的串行流架构，在 16 位定点量化下实现了 **93.3%** 的分类准确率。
+## 1. Project Overview
 
-## 🧠 神经网络模型架构 (Algorithm Level)
-本项目部署的 CNN 模型专为嵌入式视觉优化，参数量与计算精度达到平衡：
-1.  **Conv1**: 3x3 卷积 (1->32通道) + ReLU
-2.  **Conv2**: 3x3 卷积 (32->64通道) + ReLU
-3.  **MaxPool**: 2x2 窗口最大池化
-4.  **GAP**: 全局平均池化 (12x12 -> 1x1)
-5.  **FC1**: 全连接层 (64 -> 128) + ReLU
-6.  **FC2**: 全连接层 (128 -> 10 分类)
+This project implements an FPGA-based handwritten digit recognition accelerator for MNIST-style 28x28 grayscale digit images. The RTL top level accepts one signed 16-bit pixel stream, processes the image through two convolution stages, a tile-max pooling backend, and two fully connected layers, then emits ten signed 16-bit class scores with a 4-bit score index.
 
----
+The hardware design moves the convolution, pooling, accumulation, activation, and classification datapath into FPGA logic. Compared with a pure software implementation, the hardware accelerator exposes a streaming input/output interface and maps repeated multiply-accumulate operations onto FPGA DSP, LUT, register, and BRAM resources.
 
-## 🔌 系统接口与协议 (I/O & Protocol)
-加速器采用类 **AXI-Stream** 的全双工握手协议，支持连续像素流输入：
--   **clk / rst_n**: 同步时钟与异步复位。
--   **pixel_in [15:0]**: 16 位 Q8.8 格式定点像素输入（单时钟周期 1 像素）。
--   **valid_in / ready_out**: 输入侧双向握手信号。当加速器内部缓冲区满时，`ready_out` 拉低反压上游。
--   **score_out [15:0] / score_idx [3:0]**: 10 个分类的得分依序串行泵出。
--   **valid_out**: 输出有效标志，持续 10 个周期直至得分泵出完毕。
+## 2. System Architecture
 
----
+- FPGA top module: `fpga/src/top_mnist.sv`, module name `top_mnist`.
+- Input interface: `valid_in`, `ready_out`, and signed `pixel_in[15:0]`.
+- Data preprocessing: image normalization and Q8.8 quantization are performed by `py/export_fpga_data.py`; the RTL receives already-quantized 16-bit pixels.
+- Neural network / classifier modules: `conv1_layer_v5`, `conv2_layer_v5`, `backend_v5`, `fc1_layer`, and `fc2_layer`.
+- Storage modules: line-buffer arrays, initialized weight/bias ROM arrays loaded by `$readmemh`, `weight_rom`, and the backend `pool2_max[0:255]` buffer.
+- Control modules: handshake logic in `top_mnist`, line-buffer valid/ready flow control, and FSMs in convolution and fully connected layers.
+- Output interface: `valid_out`, `score_idx[3:0]`, and signed `score_out[15:0]`.
+- Clock and reset: single `clk` domain and active-low asynchronous reset `rst_n`.
 
-## 🏗️ 核心硬件设计实现 (Hardware Architecture)
+```mermaid
+flowchart LR
+    EXT["External pixel stream<br/>valid_in / ready_out<br/>pixel_in[15:0]"] --> TOP["top_mnist<br/>input buffer + output registers"]
+    TOP --> C1["conv1_layer_v5<br/>1x32, 3x3 convolution<br/>line_buffer, 9-way MAC"]
+    C1 --> C2["conv2_layer_v5<br/>32x64, 3x3 convolution<br/>32 parallel output-channel MACs"]
+    C2 --> BE["backend_v5<br/>24x24x64 stream<br/>direct 12x12 tile max"]
+    BE --> F1["fc1_layer<br/>256 -> 128<br/>addressed feature read"]
+    F1 --> F2["fc2_layer<br/>128 -> 10"]
+    F2 --> OUT["Score stream<br/>valid_out<br/>score_idx[3:0]<br/>score_out[15:0]"]
 
-### 1. 卷积层 1 (Conv1)：9 路并行卷积引擎
-*   **计算逻辑**：内置 2 行 Line Buffer，实时构造 3x3 滑动窗口。
-*   **并行度**：采用 **9 路独立 DSP 乘法器**。在一个时钟周期内，同时将 3x3 窗口内的 9 个像素与对应权重相乘并求和。
-*   **控制信号**：
-    *   `oc_idx` 计数器驱动输出通道切换（0-31）。
-    *   计算完一个 3x3 窗口后，依序泵出 32 个通道的特征值。
-*   **存储**：权重存储于分布式 RAM（LUTs），支持极速多端口并发读取。
+    W1["conv1_w/b.hex"] -. readmemh .-> C1
+    W2["conv2_w_bank0..31.hex<br/>conv2_b.hex"] -. readmemh .-> C2
+    W3["fc1_w/b.hex"] -. readmemh .-> F1
+    W4["fc2_w/b.hex"] -. readmemh .-> F2
+```
 
-### 2. 卷积层 2 (Conv2)：16 路输出通道并行架构
-*   **计算逻辑**：这是本加速器的核心。由于输入有 32 个通道，计算复杂度呈几何倍数增加。
-*   **分组流水线**：将 64 个输出通道划分为 4 个 Batch（每组 16 路）。
-*   **计算单元**：实例化 **16 个并行 MAC（乘加）引擎**。每个引擎负责计算一个输出通道。
-*   **三级流水线设计**：
-    *   **Stage 1 (Fetch)**：从 16 个独立的 Block RAM 中预取权重。
-    *   **Stage 2 (Multiply)**：DSP 内部执行 16-bit 符号位乘法。
-    *   **Stage 3 (Accumulate)**：32 个输入通道的乘积在 9 个时钟周期内完成深度累加。
-*   **存储优化**：将 1.8 万个权重拆分部署在 16 个物理 BRAM 块中，消灭了互联拥塞。
+## 3. Hardware Design
 
-### 3. 后端处理单元 (Backend)：实时池化与全连接
-*   **MaxPool & GAP 融合**：在像素流过时，通过比较器实时更新 2x2 局部最大值，并直接累加至 64 个全局累加器（`gap_sums`）中。
-*   **自动归一化**：采用 **右移 7 位**（除以 128）代替硬件除法器，在 0 延迟下完成平均池化缩放。
-*   **FC 引擎**：采用串行权重读取模式，配合 `WAIT_ROM2` 延迟补偿技术，确保了 FC1/FC2 在极小 LUT 占用下完成高维向量点积。
+`top_mnist` connects the streaming input to Conv1, Conv2, the backend pooling/classifier block, and the output score stream. It contains a one-entry input buffer and IOB-registered output signals.
 
----
+The datapath uses `DATA_WIDTH = 16`. `py/export_fpga_data.py` converts floating-point model values to signed Q8.8-style integers by multiplying by 256 and clipping to the signed 16-bit range. The RTL MAC stages accumulate into signed 40-bit registers and shift right by 8 before saturation. Conv1, Conv2, and FC1 use ReLU-style non-negative saturation; FC2 saturates to signed 16-bit output scores.
 
-## 🌊 数据流全过程 (The Pixel's Journey)
-1.  **输入端**：28x28 原始图像进入 Conv1 Line Buffer。
-2.  **Conv1**：每接收 1 像素，若窗口填满，则触发 32 个周期的突发输出，将 32 路特征图依序送往 Conv2。
-3.  **Conv2**：32 路输入流通过 512-bit 宽总线汇聚，16 路 MAC 引擎分 4 次 Batch 完成 64 个特征通道的计算。
-4.  **Backend**：特征流经过 ReLU 激活，由池化单元压缩空间维度至 1x1。
-5.  **Output**：128 维 FC1 向量与 10 维 FC2 向量依次算出，最终 10 个 `score_out` 依次呈现在输出端口。
+Weights and biases are stored in hex files under `fpga/data`. Conv1 loads `conv1_w.hex` and `conv1_b.hex`. Conv2 loads `conv2_b.hex` plus 32 independent weight-bank files, `conv2_w_bank0.hex` through `conv2_w_bank31.hex`. FC1 and FC2 use `weight_rom` instances for weight storage and distributed bias memories.
 
----
+Intermediate results are not stored as a complete full-frame feature map after Conv2. `backend_v5` consumes the Conv2 output stream and updates `pool2_max[0:255]`, representing 2x2 spatial tiles across 64 channels. This implements a direct max over each 12x12 quadrant of the 24x24 Conv2 output.
 
-## 📊 性能评估 (Evaluation)
+The implementation uses Vivado-inferred DSP48E1, LUT, register, and RAMB36E1 resources. The routed utilization report for the latest local implementation reports 43 DSP48E1 and 17 RAMB36E1 instances.
 
-### 1. 资源报告 (Resource Utilization)
-| 模块 (Module) | LUT | FF | DSP | BRAM |
-| :--- | :--- | :--- | :--- | :--- |
-| **整体工程** | **19,560 (36.8%)** | **56,713 (53.3%)** | **27 (12.3%)** | **6 (4.3%)** |
+| Module | Function | Input | Output | Hardware Resource / Design Role |
+|---|---|---|---|---|
+| `top_mnist` | Top-level stream wrapper and module interconnect | `clk`, `rst_n`, `valid_in`, `pixel_in[15:0]` | `ready_out`, `valid_out`, `score_idx[3:0]`, `score_out[15:0]` | One-entry input buffer, output IOB registers, valid/ready wiring |
+| `line_buffer` | 3x3 sliding-window generator | Signed pixel stream, parameterized width | `pixel_out[0:8]`, `valid_out` | Register/distributed storage for two prior rows and window taps |
+| `conv1_layer_v5` | First 3x3 convolution, 1 input channel, 32 output channels | 28x28 signed 16-bit pixel stream | Serialized 26x26x32 feature stream | 9 product registers, staged reduction, 40-bit accumulation, ReLU saturation |
+| `conv2_layer_v5` | Second 3x3 convolution, 32 input channels, 64 output channels | Serialized Conv1 stream | Serialized 24x24x64 feature stream | 32 parallel output-channel MAC lanes, 32 initialized weight ROM banks |
+| `backend_v5` | Streamed tile max plus FC classifier wrapper | Conv2 feature stream | Ten serialized class scores | `pool2_max[256]`, tile-address logic, FC1/FC2 coordination |
+| `fc1_layer` | Fully connected layer 256 -> 128 | Addressed `feature_data[15:0]` from backend | `out_pixels[0:127]` | Serial MAC over 256 features per neuron, BRAM-backed `weight_rom`, 40-bit accumulator |
+| `fc2_layer` | Fully connected layer 128 -> 10 | `pixel_in[0:127]` | `out_pixels[0:9]` | Serial MAC over 128 inputs per class, BRAM-backed `weight_rom`, signed saturation |
+| `weight_rom` | Generic initialized synchronous ROM | `addr` | signed `data_out[15:0]` | `(* ram_style = "block" *)`, two-stage BRAM read pipeline |
 
-### 2. 推理速度 (Speed)
-*   **主频约束**：45.45 MHz (22ns)。
-*   **延迟**：单张图片识别总耗时 **3.08 ms**。
-*   **吞吐量**：约 **324 帧/秒 (FPS)**。
+## 4. Data Path
 
-### 3. 算法精度 (Accuracy)
-*   **量化格式**：16-bit 有符号定点 (Q8.8)。
-*   **测试结果**：30 张标准 MNIST 测试图全量仿真，**正确 28 张**，准确率 **93.3%**。
+Input Data -> Preprocessing -> Feature / MAC Computation -> Accumulation -> Classification -> Output Result
 
----
+1. `py/export_fpga_data.py` exports MNIST test images into `fpga/data/image_*.hex` as signed 16-bit Q8.8-style pixel values.
+2. The external source drives `pixel_in[15:0]` with `valid_in`; `top_mnist` accepts pixels when `ready_out` is high.
+3. `conv1_layer_v5` uses `line_buffer #(DATA_WIDTH=16, IMG_WIDTH=28)` to generate 3x3 windows, multiplies the nine taps by Conv1 weights, accumulates with bias, applies ReLU saturation, and serializes 32 output-channel values per spatial position.
+4. `conv2_layer_v5` groups 32 Conv1 channel values into a 512-bit line-buffer input, generates 3x3 windows over the 26x26 Conv1 feature map, and computes 64 output channels in two batches of 32 parallel MAC lanes.
+5. `backend_v5` receives the 24x24x64 Conv2 stream. It maps each value to a tile address `{tile_r, tile_c, ic_idx}` and updates `pool2_max[0:255]`.
+6. `fc1_layer` reads the 256 pooled features using `feature_addr` and `feature_data`, computes 128 ReLU outputs, and passes them as an array to FC2.
+7. `fc2_layer` computes ten signed class scores.
+8. `backend_v5` serializes the ten scores using `score_idx[3:0]` and `score_out[15:0]`; `top_mnist` registers them to `valid_out`, `score_idx`, and `score_out`.
 
-## 🛠️ 快速启动指南
+Key visible RTL signals include:
 
-1.  **工程创建**：在 Vivado Tcl Console 执行 `source fpga/scripts/create_project.tcl`。
-2.  **功能仿真**：点击 **Run Simulation**。查看 Tcl 窗口实时输出的 `>>> SUCCESS` 对账单。
-3.  **时序闭合**：本项目已通过布线验证，WNS 裕量为 **+1.467ns** (at 22ns period)。
+| Signal | Width | Module | Role |
+|---|---:|---|---|
+| `pixel_in` | 16 signed | `top_mnist`, Conv layers, backend | Input pixel or serialized feature value |
+| `valid_in` / `ready_out` | 1 | Streaming modules | Handshake for input acceptance |
+| `valid_out` / `ready_in` | 1 | Conv layers | Handshake for downstream transfer |
+| `p_c1_serial` | 16 signed | `top_mnist` | Conv1-to-Conv2 serialized feature stream |
+| `p_c2_serial` | 16 signed | `top_mnist` | Conv2-to-backend serialized feature stream |
+| `pool2_max` | 256 x 16 signed | `backend_v5` | 2x2x64 pooled feature buffer |
+| `feature_addr` | 8 | `fc1_layer` / `backend_v5` | FC1 feature read address |
+| `score_idx` | 4 | `top_mnist` / `backend_v5` | Output class score index |
+| `score_out` | 16 signed | `top_mnist` / `backend_v5` | Output class score value |
 
----
-**Developed with Gemini CLI - 2026**
+## 5. Control Logic
+
+The design uses valid/ready handshakes between streaming stages. `top_mnist` registers external input readiness through `ready_out_q` and uses `in_buf_valid` / `in_buf_pixel` as a one-entry input buffer before Conv1.
+
+FSM states found in the RTL:
+
+| Module | FSM States | Start Condition | End Condition |
+|---|---|---|---|
+| `conv1_layer_v5` | `IDLE`, `COMPUTE`, `SERIAL_OUT` | `lb_valid` from Conv1 line buffer | All 32 output-channel values serialized |
+| `conv2_layer_v5` | `IDLE`, `COMPUTE`, `WAIT_PIPE`, `SERIAL_OUT` | `lb_valid` from Conv2 line buffer | All 64 output-channel values serialized |
+| `fc1_layer` | `IDLE`, `RUN`, `STORE`, `FINISH` | `valid_in` from backend tile-max stage | All 128 FC1 outputs stored, then `valid_out` asserted |
+| `fc2_layer` | `IDLE`, `RUN`, `STORE`, `FINISH` | `valid_in` from FC1 | All ten FC2 outputs stored, then `valid_out` asserted |
+
+`backend_v5` uses counters and control flags rather than an explicit enum. Its visible control registers include `ic_idx`, `col_idx`, `row_idx`, `ready_out_reg`, `fc_inflight`, `finish_pending`, `pool_req`, `pool_addr`, and `pool_init`. When the last Conv2 value of the 24x24x64 stream is accepted, the backend stalls upstream input, launches FC1/FC2, emits ten scores, and then releases the stall.
+
+## 6. Performance
+
+The following data is extracted from the latest local build directory `fpga/build/iter5_conv1_pipe` and its associated reports/logs.
+
+| Metric | Value | Source / Notes |
+|---|---|---|
+| Target clock frequency | 80.000 MHz | `fpga/scripts/timing.xdc`; `route_timing_summary.rpt` Clock Summary |
+| Target clock period | 12.500 ns | `fpga/scripts/timing.xdc` |
+| Maximum proven frequency | Not available in current files | Current timing reports validate the 80 MHz constraint but do not sweep Fmax |
+| Latency per inference | 429,706 cycles average | `fpga/build/iter5_conv1_pipe/sim/accuracy.log`, `ACCURACY_SUMMARY` |
+| Latency per inference at 80 MHz | About 5.371 ms | Derived from 429,706 cycles / 80 MHz |
+| Throughput at 80 MHz | About 186.2 images/s | Derived from sequential latency; no overlapping multi-image throughput report is present |
+| RTL simulation accuracy | 30/30 images, 100% | `accuracy.log`, exported 30-image test set |
+| Golden prediction accuracy | 30/30 images, 100% | `accuracy.log`, same 30-image set |
+| Hardware/golden argmax match | 30/30 images, 100% | `accuracy.log` |
+| Full MNIST test accuracy | Not available in current files | No committed log with full test-set accuracy was found |
+| Routed LUT utilization | 19,289 / 53,200, 36.26% | `route_utilization.rpt` |
+| Routed FF utilization | 46,100 / 106,400, 43.33% | `route_utilization.rpt` |
+| Routed BRAM utilization | 17 / 140, 12.14% | `route_utilization.rpt` |
+| Routed DSP utilization | 43 / 220, 19.55% | `route_utilization.rpt` |
+| Timing slack | WNS 0.419 ns, TNS 0.000 ns | `route_timing_summary.rpt` |
+| Hold slack | WHS 0.054 ns, THS 0.000 ns | `route_timing_summary.rpt` |
+| Power | Total on-chip 0.322 W; dynamic 0.214 W; static 0.109 W | `top_mnist_power_routed.rpt` |
+| Board-level performance | Not available in current files | No hardware board test log was found |
+
+To regenerate implementation reports with Vivado:
+
+```powershell
+vivado -mode batch -source fpga/scripts/run_vivado_reports.tcl -tclargs <tag>
+```
+
+To rerun the 30-image RTL accuracy simulation:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File fpga/scripts/run_accuracy_sim.ps1 -Tag <tag>
+```
+
+## 7. FPGA Resource Utilization
+
+The routed utilization data below is from `fpga/build/iter5_conv1_pipe/reports/route_utilization.rpt`.
+
+| Resource | Used | Available | Utilization |
+|---|---:|---:|---:|
+| Slice LUTs | 19,289 | 53,200 | 36.26% |
+| Slice Registers | 46,100 | 106,400 | 43.33% |
+| Block RAM Tile | 17 | 140 | 12.14% |
+| DSPs | 43 | 220 | 19.55% |
+| Bonded IOB | 41 | 125 | 32.80% |
+| BUFGCTRL | 2 | 32 | 6.25% |
+
+Primitive-level entries in the same report include 43 `DSP48E1`, 17 `RAMB36E1`, 42,017 `FDCE`, 4,096 `FDRE`, and 2 `BUFG` instances.
+
+Per-module utilization is Not available in current files. The current report was generated with flat `report_utilization`; a module-level breakdown can be generated by running Vivado with `report_utilization -hierarchical` after synthesis or implementation.
+
+## 8. Timing Analysis
+
+Timing data is from `fpga/build/iter5_conv1_pipe/reports/route_timing_summary.rpt` and `fpga/build/iter5_conv1_pipe/reports/route_timing_paths.rpt`.
+
+| Timing Item | Value | Source / Notes |
+|---|---|---|
+| Target clock period | 12.500 ns | `timing.xdc` and routed timing summary |
+| Target clock frequency | 80.000 MHz | Routed timing summary Clock Summary |
+| Worst Negative Slack | 0.419 ns | Reported as Slack (MET), setup path |
+| Total Negative Slack | 0.000 ns | Routed timing summary |
+| Worst Hold Slack | 0.054 ns | Routed timing summary |
+| Timing closure | Met | `All user specified timing constraints are met.` |
+| Critical setup path | `backend_inst/fc1_inst/px_d2_reg[15]` to `backend_inst/fc1_inst/out_pixels_reg[100][4]` | `route_timing_paths.rpt` |
+| Data path delay | 11.826 ns | Critical path report |
+| Maximum Fmax | Not available in current files | No Fmax sweep or unconstrained max-frequency report was found |
+
+The reported critical setup path is inside FC1 saturation/output storage logic and includes one `DSP48E1`, four `CARRY4` levels, and small LUT logic.
+
+## 9. Verification
+
+Verification files found in the project:
+
+| File | Purpose |
+|---|---|
+| `fpga/sim/tb_mnist_top_acc.sv` | Top-level 30-image RTL accuracy testbench |
+| `fpga/sim/tb_mnist_top.sv` | Existing top-level simulation testbench |
+| `fpga/sim/tb_conv1.sv` | Conv1 simulation testbench |
+| `fpga/sim/tb_conv2.sv` | Conv2 simulation testbench |
+| `fpga/sim/tb_backend.sv` | Backend simulation testbench |
+| `fpga/data/image_0.hex` through `image_29.hex` | Exported 30-image input dataset |
+| `fpga/data/labels_30.hex` | Labels for the 30-image simulation set |
+| `fpga/data/golden_0.hex` through `golden_29.hex` | Golden FC2 score vectors for the 30 exported images |
+| `fpga/scripts/run_accuracy_sim.ps1` | Runs `xvlog`, `xelab`, and `xsim` for the accuracy testbench |
+| `fpga/scripts/run_vivado_reports.tcl` | Creates a Vivado project and emits synthesis/implementation reports |
+
+The latest local simulation result is in `fpga/build/iter5_conv1_pipe/sim/accuracy.log`. It reports 30 images tested, 30 correct hardware predictions, 30 correct golden predictions, 30 hardware/golden argmax matches, and 429,706 average cycles per image.
+
+Simulation waveform availability is Not available in current files committed for source review. A local generated WDB exists under the Vivado build directory, but generated waveform databases are not part of the source RTL flow.
+
+Hardware board test results are Not available in current files.
