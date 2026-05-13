@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-// Backend: Conv2 stream -> direct 12x12 tile max -> FC1 -> FC2.
+// Backend: Conv2 pair-max stream -> direct 12x12 tile max -> FC1 -> FC2.
 // The original 2x2 MaxPool followed by 6x6 MaxPool is equivalent to a
 // max over each 12x12 quadrant of the 24x24 Conv2 output.
 module backend_v5 #(
@@ -18,7 +18,7 @@ module backend_v5 #(
 );
 
     reg [5:0] ic_idx;
-    reg [4:0] col_idx;
+    reg [3:0] col_idx;
     reg [4:0] row_idx;
 
     reg signed [15:0] pool2_max [0:255];
@@ -82,17 +82,17 @@ module backend_v5 #(
 
             if (input_fire) begin
                 tile_r = (row_idx >= 12);
-                tile_c = (col_idx >= 12);
+                tile_c = (col_idx >= 6);
 
                 pool_req <= 1;
                 pool_px <= pixel_in;
                 pool_addr <= {tile_r, tile_c, ic_idx};
                 pool_init <= ((row_idx == 0 || row_idx == 12) &&
-                              (col_idx == 0 || col_idx == 12));
+                              (col_idx == 0 || col_idx == 6));
 
                 if (ic_idx == 63) begin
                     ic_idx <= 0;
-                    if (col_idx == 23) begin
+                    if (col_idx == 11) begin
                         col_idx <= 0;
                         if (row_idx == 23) begin
                             row_idx <= 0;

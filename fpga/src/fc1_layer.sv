@@ -23,17 +23,28 @@ module fc1_layer #(
     localparam W_ADDR_WIDTH = (TOTAL_WEIGHTS <= 1) ? 1 : $clog2(TOTAL_WEIGHTS);
     localparam ISSUE_WIDTH = $clog2(TOTAL_INPUTS + 3);
 
-    wire signed [DATA_WIDTH-1:0] rom_w_out;
-    reg [W_ADDR_WIDTH-1:0] w_addr;
-    weight_rom #(
-        .DEPTH(TOTAL_WEIGHTS),
-        .DATA_FILE(W_FILE),
-        .ADDR_WIDTH(W_ADDR_WIDTH)
-    ) w_rom_inst (
-        .clk(clk),
-        .addr(w_addr),
-        .data_out(rom_w_out)
-    );
+    reg [W_ADDR_WIDTH-1:0] w_addr0;
+    reg [W_ADDR_WIDTH-1:0] w_addr1;
+    (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_mem [0:TOTAL_WEIGHTS-1];
+    reg signed [DATA_WIDTH-1:0] w0_mem_reg;
+    reg signed [DATA_WIDTH-1:0] w1_mem_reg;
+    reg signed [DATA_WIDTH-1:0] rom_w0_out;
+    reg signed [DATA_WIDTH-1:0] rom_w1_out;
+
+    initial begin
+        w0_mem_reg = 0;
+        w1_mem_reg = 0;
+        rom_w0_out = 0;
+        rom_w1_out = 0;
+        $readmemh(W_FILE, w_mem);
+    end
+
+    always @(posedge clk) begin
+        w0_mem_reg <= w_mem[w_addr0];
+        w1_mem_reg <= w_mem[w_addr1];
+        rom_w0_out <= w0_mem_reg;
+        rom_w1_out <= w1_mem_reg;
+    end
 
     (* ram_style = "distributed" *) reg signed [DATA_WIDTH-1:0] b_mem [0:OUT_CHANNELS-1];
     initial $readmemh(B_FILE, b_mem);
@@ -44,7 +55,8 @@ module fc1_layer #(
     reg [$clog2(OUT_CHANNELS)-1:0] oc_idx;
     reg [ISSUE_WIDTH-1:0] issue_count;
     reg [ISSUE_WIDTH-1:0] mac_count;
-    reg signed [39:0] acc;
+    reg signed [39:0] acc0;
+    reg signed [39:0] acc1;
     reg signed [DATA_WIDTH-1:0] px_d0;
     reg signed [DATA_WIDTH-1:0] px_d1;
     reg signed [DATA_WIDTH-1:0] px_d2;
@@ -65,8 +77,10 @@ module fc1_layer #(
             issue_count <= 0;
             mac_count <= 0;
             valid_out <= 0;
-            w_addr <= 0;
-            acc <= 0;
+            w_addr0 <= 0;
+            w_addr1 <= 0;
+            acc0 <= 0;
+            acc1 <= 0;
             px_d0 <= 0;
             px_d1 <= 0;
             px_d2 <= 0;
@@ -80,8 +94,10 @@ module fc1_layer #(
                         oc_idx <= 0;
                         issue_count <= 0;
                         mac_count <= 0;
-                        acc <= (b_mem[0] <<< 8);
-                        w_addr <= 0;
+                        acc0 <= (b_mem[0] <<< 8);
+                        acc1 <= (b_mem[1] <<< 8);
+                        w_addr0 <= 0;
+                        w_addr1 <= TOTAL_INPUTS;
                         px_d0 <= 0;
                         px_d1 <= 0;
                         px_d2 <= 0;
@@ -89,12 +105,16 @@ module fc1_layer #(
                 end
 
                 RUN: begin
-                    automatic logic signed [39:0] next_acc;
-                    next_acc = acc;
+                    automatic logic signed [39:0] next_acc0;
+                    automatic logic signed [39:0] next_acc1;
+                    next_acc0 = acc0;
+                    next_acc1 = acc1;
 
                     if (issue_count >= 3 && mac_count < TOTAL_INPUTS) begin
-                        next_acc = acc + ($signed(px_d2) * $signed(rom_w_out));
-                        acc <= next_acc;
+                        next_acc0 = acc0 + ($signed(px_d2) * $signed(rom_w0_out));
+                        next_acc1 = acc1 + ($signed(px_d2) * $signed(rom_w1_out));
+                        acc0 <= next_acc0;
+                        acc1 <= next_acc1;
                         mac_count <= mac_count + 1;
                         if (mac_count == TOTAL_INPUTS - 1) begin
                             state <= STORE;
@@ -102,9 +122,12 @@ module fc1_layer #(
                     end
 
                     if (issue_count < TOTAL_INPUTS) begin
-                        automatic logic [W_ADDR_WIDTH-1:0] issue_addr;
-                        issue_addr = (oc_idx * TOTAL_INPUTS) + issue_count;
-                        w_addr <= issue_addr;
+                        automatic logic [W_ADDR_WIDTH-1:0] issue_addr0;
+                        automatic logic [W_ADDR_WIDTH-1:0] issue_addr1;
+                        issue_addr0 = (oc_idx * TOTAL_INPUTS) + issue_count;
+                        issue_addr1 = ((oc_idx + 1) * TOTAL_INPUTS) + issue_count;
+                        w_addr0 <= issue_addr0;
+                        w_addr1 <= issue_addr1;
                         px_d0 <= feature_data;
                     end else begin
                         px_d0 <= 0;
@@ -115,14 +138,16 @@ module fc1_layer #(
                 end
 
                 STORE: begin
-                    out_pixels[oc_idx] <= sat_relu(acc);
-                    if (oc_idx == OUT_CHANNELS - 1) begin
+                    out_pixels[oc_idx] <= sat_relu(acc0);
+                    out_pixels[oc_idx + 1] <= sat_relu(acc1);
+                    if (oc_idx == OUT_CHANNELS - 2) begin
                         state <= FINISH;
                     end else begin
-                        oc_idx <= oc_idx + 1;
+                        oc_idx <= oc_idx + 2;
                         issue_count <= 0;
                         mac_count <= 0;
-                        acc <= (b_mem[oc_idx + 1] <<< 8);
+                        acc0 <= (b_mem[oc_idx + 2] <<< 8);
+                        acc1 <= (b_mem[oc_idx + 3] <<< 8);
                         px_d0 <= 0;
                         px_d1 <= 0;
                         px_d2 <= 0;

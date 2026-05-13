@@ -228,6 +228,28 @@ powershell -ExecutionPolicy Bypass -File fpga\scripts\run_accuracy_sim.ps1 -Tag 
 fpga/build/manual_project/mnist_zynq_7020_rs.xpr
 ```
 
+## 10.1 Latest verified snapshot
+
+The current verified RTL snapshot is `iter12_pairmax_fc1x2`.
+
+| Metric | Value | Source / Notes |
+|---|---:|---|
+| RTL simulation images | 100 | `fpga/build/iter12_pairmax_fc1x2_100/sim/accuracy.log` |
+| RTL accuracy | 99/100, 99% | 100-image xsim run |
+| Python golden match | 98/100, 98% | 100-image xsim run |
+| Average cycles per image | 197,858 | 100-image xsim run |
+| Target clock | 80 MHz | `fpga/scripts/timing.xdc` |
+| Target period | 12.500 ns | Vivado post-route timing |
+| Post-route WNS | +0.285 ns | `route_timing_summary.rpt` |
+| Post-route TNS | 0.000 ns | `route_timing_summary.rpt` |
+| Timing closure | Met | Vivado post-route timing |
+| Slice LUTs | 21,246 / 53,200, 39.94% | `route_utilization.rpt` |
+| Slice Registers | 54,620 / 106,400, 51.33% | `route_utilization.rpt` |
+| BRAM Tile | 8 / 140, 5.71% | `route_utilization.rpt` |
+| DSPs | 76 / 220, 34.55% | `route_utilization.rpt` |
+
+This snapshot includes Conv2 local pair-max compression and two-output parallel FC1 computation. The next optimization target is Conv2 `64OC x 2COL`.
+
 ## 11. 说明
 
 本分支保留当前版本实际使用的 RTL、脚本、仿真入口和 100 张验证样本数据。Vivado build 目录、旧实现报告、IDE 配置和过时脚本不再作为源码仓库内容维护。当前 RTL 中没有额外未使用的 `fpga/src/*.sv` 文件可删除。

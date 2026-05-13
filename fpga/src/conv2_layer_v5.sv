@@ -2,9 +2,8 @@
 
 // Zynq-7020 Conv2 (v10.0 - practical row-stationary tile dataflow)
 // The layer keeps a 3-row x 4-column activation tile stationary while two
-// adjacent output columns are accumulated. The output serializer is decoupled
-// from the compute FSM so the next tile can compute while the previous tile is
-// streamed to the backend.
+// adjacent output columns are accumulated. The two columns are locally maxed
+// per output channel before streaming to the backend pool stage.
 module conv2_layer_v5 #(
     parameter DATA_WIDTH = 16,
     parameter IN_CHANNELS = 32,
@@ -100,6 +99,15 @@ module conv2_layer_v5 #(
             if ((value >>> 8) > 32767) sat_relu = 16'sh7fff;
             else if ((value >>> 8) < 0) sat_relu = 16'sh0000;
             else sat_relu = value[23:8];
+        end
+    endfunction
+
+    function automatic signed [DATA_WIDTH-1:0] max2(
+        input signed [DATA_WIDTH-1:0] a,
+        input signed [DATA_WIDTH-1:0] b
+    );
+        begin
+            max2 = (a > b) ? a : b;
         end
     endfunction
 
@@ -199,17 +207,12 @@ module conv2_layer_v5 #(
             end
         end else begin
             if (out_active && valid_out && ready_in) begin
-                if (!serial_col && serial_oc == 63) begin
-                    serial_col <= 1;
-                    serial_oc <= 0;
-                    pixel_out <= results1[0];
-                end else if (serial_col && serial_oc == 63) begin
+                if (serial_oc == 63) begin
                     valid_out <= 0;
                     out_active <= 0;
                 end else begin
                     serial_oc <= serial_oc + 1;
-                    if (serial_col) pixel_out <= results1[serial_oc + 1];
-                    else pixel_out <= results0[serial_oc + 1];
+                    pixel_out <= max2(results0[serial_oc + 1], results1[serial_oc + 1]);
                 end
             end
 
@@ -356,7 +359,7 @@ module conv2_layer_v5 #(
                             serial_oc <= 0;
                             out_active <= 1;
                             valid_out <= 1;
-                            pixel_out <= results0[0];
+                            pixel_out <= max2(results0[0], results1[0]);
                             state <= IDLE;
                         end else begin
                             batch_idx <= 1;
