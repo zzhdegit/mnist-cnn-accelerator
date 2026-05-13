@@ -2,8 +2,9 @@
 
 // Zynq-7020 Conv2 (v10.0 - practical row-stationary tile dataflow)
 // The layer keeps a 3-row x 4-column activation tile stationary while two
-// adjacent output columns are accumulated. The two columns are locally maxed
-// per output channel before streaming to the backend pool stage.
+// adjacent output columns are accumulated for all 64 output channels in one
+// compute pass. The two columns are locally maxed per output channel before
+// streaming to the backend pool stage.
 module conv2_layer_v5 #(
     parameter DATA_WIDTH = 16,
     parameter IN_CHANNELS = 32,
@@ -23,8 +24,9 @@ module conv2_layer_v5 #(
 
     reg signed [DATA_WIDTH-1:0] b_mem_all [0:63];
 
-    // One initialized ROM per parallel output channel. Each bank stores two
-    // output-channel groups: group 0 => oc 0..31, group 1 => oc 32..63.
+    // One initialized ROM per physical output-channel lane. Each bank stores
+    // two output-channel groups: group 0 => oc 0..31, group 1 => oc 32..63.
+    // The 64OC x 2COL engine reads both groups each cycle from the same bank.
     (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_0 [0:575];
     (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_1 [0:575];
     (* ram_style = "block" *) reg signed [DATA_WIDTH-1:0] w_rom_2 [0:575];
@@ -161,30 +163,27 @@ module conv2_layer_v5 #(
     reg signed [511:0] tile_r1 [0:3];
     reg signed [511:0] tile_r2 [0:3];
 
-    reg batch_idx;
     reg [5:0] ic_idx;
     reg [3:0] k_idx;
     reg [5:0] serial_oc;
-    reg serial_col;
     reg out_active;
     reg [4:0] win_col_idx;
 
-    reg signed [39:0] acc0 [0:31];
-    reg signed [39:0] acc1 [0:31];
+    reg signed [39:0] acc0 [0:63];
+    reg signed [39:0] acc1 [0:63];
     reg signed [DATA_WIDTH-1:0] results0 [0:63];
     reg signed [DATA_WIDTH-1:0] results1 [0:63];
-    reg signed [DATA_WIDTH-1:0] w_read [0:31];
+    reg signed [DATA_WIDTH-1:0] w_read_lo [0:31];
+    reg signed [DATA_WIDTH-1:0] w_read_hi [0:31];
     reg signed [DATA_WIDTH-1:0] px0_read;
     reg signed [DATA_WIDTH-1:0] px1_read;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             state <= IDLE;
-            batch_idx <= 0;
             ic_idx <= 0;
             k_idx <= 0;
             serial_oc <= 0;
-            serial_col <= 0;
             win_col_idx <= 0;
             valid_out <= 0;
             pixel_out <= 0;
@@ -200,10 +199,13 @@ module conv2_layer_v5 #(
                 results0[i] <= 0;
                 results1[i] <= 0;
             end
-            for (integer m = 0; m < 32; m = m + 1) begin
+            for (integer m = 0; m < 64; m = m + 1) begin
                 acc0[m] <= 0;
                 acc1[m] <= 0;
-                w_read[m] <= 0;
+            end
+            for (integer m = 0; m < 32; m = m + 1) begin
+                w_read_lo[m] <= 0;
+                w_read_hi[m] <= 0;
             end
         end else begin
             if (out_active && valid_out && ready_in) begin
@@ -239,53 +241,87 @@ module conv2_layer_v5 #(
                         tile_r1[3] <= lb_out[5];
                         tile_r2[3] <= lb_out[8];
                         win_col_idx <= (win_col_idx == 23) ? 0 : win_col_idx + 1;
-                        batch_idx <= 0;
                         ic_idx <= 0;
                         k_idx <= 0;
                         px0_read <= 0;
                         px1_read <= 0;
-                        for (integer m = 0; m < 32; m = m + 1) begin
+                        for (integer m = 0; m < 64; m = m + 1) begin
                             acc0[m] <= (b_mem_all[m] <<< 8);
                             acc1[m] <= (b_mem_all[m] <<< 8);
-                            w_read[m] <= 0;
+                        end
+                        for (integer m = 0; m < 32; m = m + 1) begin
+                            w_read_lo[m] <= 0;
+                            w_read_hi[m] <= 0;
                         end
                         state <= COMPUTE;
                     end
                 end
 
                 COMPUTE: begin
-                    w_read[0] <= w_rom_0[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[1] <= w_rom_1[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[2] <= w_rom_2[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[3] <= w_rom_3[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[4] <= w_rom_4[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[5] <= w_rom_5[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[6] <= w_rom_6[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[7] <= w_rom_7[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[8] <= w_rom_8[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[9] <= w_rom_9[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[10] <= w_rom_10[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[11] <= w_rom_11[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[12] <= w_rom_12[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[13] <= w_rom_13[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[14] <= w_rom_14[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[15] <= w_rom_15[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[16] <= w_rom_16[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[17] <= w_rom_17[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[18] <= w_rom_18[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[19] <= w_rom_19[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[20] <= w_rom_20[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[21] <= w_rom_21[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[22] <= w_rom_22[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[23] <= w_rom_23[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[24] <= w_rom_24[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[25] <= w_rom_25[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[26] <= w_rom_26[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[27] <= w_rom_27[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[28] <= w_rom_28[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[29] <= w_rom_29[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[30] <= w_rom_30[batch_idx*288 + ic_idx*9 + k_idx];
-                    w_read[31] <= w_rom_31[batch_idx*288 + ic_idx*9 + k_idx];
+                    w_read_lo[0] <= w_rom_0[ic_idx*9 + k_idx];
+                    w_read_lo[1] <= w_rom_1[ic_idx*9 + k_idx];
+                    w_read_lo[2] <= w_rom_2[ic_idx*9 + k_idx];
+                    w_read_lo[3] <= w_rom_3[ic_idx*9 + k_idx];
+                    w_read_lo[4] <= w_rom_4[ic_idx*9 + k_idx];
+                    w_read_lo[5] <= w_rom_5[ic_idx*9 + k_idx];
+                    w_read_lo[6] <= w_rom_6[ic_idx*9 + k_idx];
+                    w_read_lo[7] <= w_rom_7[ic_idx*9 + k_idx];
+                    w_read_lo[8] <= w_rom_8[ic_idx*9 + k_idx];
+                    w_read_lo[9] <= w_rom_9[ic_idx*9 + k_idx];
+                    w_read_lo[10] <= w_rom_10[ic_idx*9 + k_idx];
+                    w_read_lo[11] <= w_rom_11[ic_idx*9 + k_idx];
+                    w_read_lo[12] <= w_rom_12[ic_idx*9 + k_idx];
+                    w_read_lo[13] <= w_rom_13[ic_idx*9 + k_idx];
+                    w_read_lo[14] <= w_rom_14[ic_idx*9 + k_idx];
+                    w_read_lo[15] <= w_rom_15[ic_idx*9 + k_idx];
+                    w_read_lo[16] <= w_rom_16[ic_idx*9 + k_idx];
+                    w_read_lo[17] <= w_rom_17[ic_idx*9 + k_idx];
+                    w_read_lo[18] <= w_rom_18[ic_idx*9 + k_idx];
+                    w_read_lo[19] <= w_rom_19[ic_idx*9 + k_idx];
+                    w_read_lo[20] <= w_rom_20[ic_idx*9 + k_idx];
+                    w_read_lo[21] <= w_rom_21[ic_idx*9 + k_idx];
+                    w_read_lo[22] <= w_rom_22[ic_idx*9 + k_idx];
+                    w_read_lo[23] <= w_rom_23[ic_idx*9 + k_idx];
+                    w_read_lo[24] <= w_rom_24[ic_idx*9 + k_idx];
+                    w_read_lo[25] <= w_rom_25[ic_idx*9 + k_idx];
+                    w_read_lo[26] <= w_rom_26[ic_idx*9 + k_idx];
+                    w_read_lo[27] <= w_rom_27[ic_idx*9 + k_idx];
+                    w_read_lo[28] <= w_rom_28[ic_idx*9 + k_idx];
+                    w_read_lo[29] <= w_rom_29[ic_idx*9 + k_idx];
+                    w_read_lo[30] <= w_rom_30[ic_idx*9 + k_idx];
+                    w_read_lo[31] <= w_rom_31[ic_idx*9 + k_idx];
+                    w_read_hi[0] <= w_rom_0[288 + ic_idx*9 + k_idx];
+                    w_read_hi[1] <= w_rom_1[288 + ic_idx*9 + k_idx];
+                    w_read_hi[2] <= w_rom_2[288 + ic_idx*9 + k_idx];
+                    w_read_hi[3] <= w_rom_3[288 + ic_idx*9 + k_idx];
+                    w_read_hi[4] <= w_rom_4[288 + ic_idx*9 + k_idx];
+                    w_read_hi[5] <= w_rom_5[288 + ic_idx*9 + k_idx];
+                    w_read_hi[6] <= w_rom_6[288 + ic_idx*9 + k_idx];
+                    w_read_hi[7] <= w_rom_7[288 + ic_idx*9 + k_idx];
+                    w_read_hi[8] <= w_rom_8[288 + ic_idx*9 + k_idx];
+                    w_read_hi[9] <= w_rom_9[288 + ic_idx*9 + k_idx];
+                    w_read_hi[10] <= w_rom_10[288 + ic_idx*9 + k_idx];
+                    w_read_hi[11] <= w_rom_11[288 + ic_idx*9 + k_idx];
+                    w_read_hi[12] <= w_rom_12[288 + ic_idx*9 + k_idx];
+                    w_read_hi[13] <= w_rom_13[288 + ic_idx*9 + k_idx];
+                    w_read_hi[14] <= w_rom_14[288 + ic_idx*9 + k_idx];
+                    w_read_hi[15] <= w_rom_15[288 + ic_idx*9 + k_idx];
+                    w_read_hi[16] <= w_rom_16[288 + ic_idx*9 + k_idx];
+                    w_read_hi[17] <= w_rom_17[288 + ic_idx*9 + k_idx];
+                    w_read_hi[18] <= w_rom_18[288 + ic_idx*9 + k_idx];
+                    w_read_hi[19] <= w_rom_19[288 + ic_idx*9 + k_idx];
+                    w_read_hi[20] <= w_rom_20[288 + ic_idx*9 + k_idx];
+                    w_read_hi[21] <= w_rom_21[288 + ic_idx*9 + k_idx];
+                    w_read_hi[22] <= w_rom_22[288 + ic_idx*9 + k_idx];
+                    w_read_hi[23] <= w_rom_23[288 + ic_idx*9 + k_idx];
+                    w_read_hi[24] <= w_rom_24[288 + ic_idx*9 + k_idx];
+                    w_read_hi[25] <= w_rom_25[288 + ic_idx*9 + k_idx];
+                    w_read_hi[26] <= w_rom_26[288 + ic_idx*9 + k_idx];
+                    w_read_hi[27] <= w_rom_27[288 + ic_idx*9 + k_idx];
+                    w_read_hi[28] <= w_rom_28[288 + ic_idx*9 + k_idx];
+                    w_read_hi[29] <= w_rom_29[288 + ic_idx*9 + k_idx];
+                    w_read_hi[30] <= w_rom_30[288 + ic_idx*9 + k_idx];
+                    w_read_hi[31] <= w_rom_31[288 + ic_idx*9 + k_idx];
                     case (k_idx)
                         4'd0: begin
                             px0_read <= tile_r0[0][ic_idx*16 +: 16];
@@ -326,8 +362,10 @@ module conv2_layer_v5 #(
                     endcase
 
                     for (integer m = 0; m < 32; m = m + 1) begin
-                        acc0[m] <= acc0[m] + ($signed(px0_read) * $signed(w_read[m]));
-                        acc1[m] <= acc1[m] + ($signed(px1_read) * $signed(w_read[m]));
+                        acc0[m] <= acc0[m] + ($signed(px0_read) * $signed(w_read_lo[m]));
+                        acc1[m] <= acc1[m] + ($signed(px1_read) * $signed(w_read_lo[m]));
+                        acc0[32 + m] <= acc0[32 + m] + ($signed(px0_read) * $signed(w_read_hi[m]));
+                        acc1[32 + m] <= acc1[32 + m] + ($signed(px1_read) * $signed(w_read_hi[m]));
                     end
 
                     if (k_idx == 8) begin
@@ -345,35 +383,31 @@ module conv2_layer_v5 #(
 
                 WAIT_PIPE: begin
                     if (!out_active) begin
+                        automatic logic signed [39:0] first_res0;
+                        automatic logic signed [39:0] first_res1;
+                        first_res0 = acc0[0] + ($signed(px0_read) * $signed(w_read_lo[0]));
+                        first_res1 = acc1[0] + ($signed(px1_read) * $signed(w_read_lo[0]));
+
                         for (integer m = 0; m < 32; m = m + 1) begin
-                            automatic logic signed [39:0] res0;
-                            automatic logic signed [39:0] res1;
-                            res0 = acc0[m] + ($signed(px0_read) * $signed(w_read[m]));
-                            res1 = acc1[m] + ($signed(px1_read) * $signed(w_read[m]));
-                            results0[batch_idx*32 + m] <= sat_relu(res0);
-                            results1[batch_idx*32 + m] <= sat_relu(res1);
+                            automatic logic signed [39:0] res0_lo;
+                            automatic logic signed [39:0] res1_lo;
+                            automatic logic signed [39:0] res0_hi;
+                            automatic logic signed [39:0] res1_hi;
+                            res0_lo = acc0[m] + ($signed(px0_read) * $signed(w_read_lo[m]));
+                            res1_lo = acc1[m] + ($signed(px1_read) * $signed(w_read_lo[m]));
+                            res0_hi = acc0[32 + m] + ($signed(px0_read) * $signed(w_read_hi[m]));
+                            res1_hi = acc1[32 + m] + ($signed(px1_read) * $signed(w_read_hi[m]));
+                            results0[m] <= sat_relu(res0_lo);
+                            results1[m] <= sat_relu(res1_lo);
+                            results0[32 + m] <= sat_relu(res0_hi);
+                            results1[32 + m] <= sat_relu(res1_hi);
                         end
 
-                        if (batch_idx == 1) begin
-                            serial_col <= 0;
-                            serial_oc <= 0;
-                            out_active <= 1;
-                            valid_out <= 1;
-                            pixel_out <= max2(results0[0], results1[0]);
-                            state <= IDLE;
-                        end else begin
-                            batch_idx <= 1;
-                            ic_idx <= 0;
-                            k_idx <= 0;
-                            px0_read <= 0;
-                            px1_read <= 0;
-                            for (integer m = 0; m < 32; m = m + 1) begin
-                                acc0[m] <= (b_mem_all[32 + m] <<< 8);
-                                acc1[m] <= (b_mem_all[32 + m] <<< 8);
-                                w_read[m] <= 0;
-                            end
-                            state <= COMPUTE;
-                        end
+                        serial_oc <= 0;
+                        out_active <= 1;
+                        valid_out <= 1;
+                        pixel_out <= max2(sat_relu(first_res0), sat_relu(first_res1));
+                        state <= IDLE;
                     end else begin
                         state <= WAIT_PIPE;
                     end

@@ -230,25 +230,27 @@ fpga/build/manual_project/mnist_zynq_7020_rs.xpr
 
 ## 10.1 Latest verified snapshot
 
-The current verified RTL snapshot is `iter12_pairmax_fc1x2`.
+The current verified RTL snapshot is `iter13_conv2_64oc2col`.
 
 | Metric | Value | Source / Notes |
 |---|---:|---|
-| RTL simulation images | 100 | `fpga/build/iter12_pairmax_fc1x2_100/sim/accuracy.log` |
+| RTL simulation images | 100 | `fpga/build/iter13_conv2_64oc2col_100/sim/accuracy.log` |
 | RTL accuracy | 99/100, 99% | 100-image xsim run |
 | Python golden match | 98/100, 98% | 100-image xsim run |
-| Average cycles per image | 197,858 | 100-image xsim run |
+| Average cycles per image | 114,626 | 100-image xsim run |
+| 80 MHz latency per image | 1.4328 ms | 114,626 / 80 MHz |
+| 80 MHz throughput | 697.9 images/s | Derived from 80 MHz cycle count |
 | Target clock | 80 MHz | `fpga/scripts/timing.xdc` |
 | Target period | 12.500 ns | Vivado post-route timing |
-| Post-route WNS | +0.285 ns | `route_timing_summary.rpt` |
+| Post-route WNS | +0.171 ns | `route_timing_summary.rpt` |
 | Post-route TNS | 0.000 ns | `route_timing_summary.rpt` |
 | Timing closure | Met | Vivado post-route timing |
-| Slice LUTs | 21,246 / 53,200, 39.94% | `route_utilization.rpt` |
-| Slice Registers | 54,620 / 106,400, 51.33% | `route_utilization.rpt` |
+| Slice LUTs | 26,648 / 53,200, 50.09% | `route_utilization.rpt` |
+| Slice Registers | 57,520 / 106,400, 54.06% | `route_utilization.rpt` |
 | BRAM Tile | 8 / 140, 5.71% | `route_utilization.rpt` |
-| DSPs | 76 / 220, 34.55% | `route_utilization.rpt` |
+| DSPs | 140 / 220, 63.64% | `route_utilization.rpt` |
 
-This snapshot includes Conv2 local pair-max compression and two-output parallel FC1 computation. The next optimization target is Conv2 `64OC x 2COL`.
+This snapshot includes Conv2 local pair-max compression, two-output parallel FC1 computation, and Conv2 `64OC x 2COL` parallel output-channel computation.
 
 ## 11. 说明
 
